@@ -1,0 +1,6 @@
+{
+  "name": "每日诗歌信箱",
+  "description": "让英语学习变成最漫不经心、最轻柔的一个动作。每天打开信箱，拆阅一封送至心底的英文诗信与精选小词。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
