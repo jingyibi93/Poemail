@@ -1,15 +1,27 @@
 export type MoodType = 'quiet' | 'tired' | 'rainy' | 'sleepless' | 'escape' | 'happy';
 
+export type CategoryType = 'soft_landing' | 'quiet_room' | 'rain_note' | 'little_glow' | 'far_away';
+
 export interface PoemLetter {
   id: string;
-  dateStr: string;       // e.g. "June 15"
+  category: CategoryType;
+  categoryTitle: string;
+  categoryDescription: string;
+  targetWord: string;
+  phonetic: string;
+  partOfSpeech: string;
+  wordMeaning: string;
+  poem: string;
+  translation: string;
+  example: string;
+  exampleTranslation: string;
+  
+  // Backward compatibility fields for pre-existing UI elements
+  dateStr: string;
   mood: MoodType;
-  poem: string;          // Original beautiful, simple English poem
-  translation: string;   // Poetic Chinese translation
-  word: string;          // Today's key word
-  wordMeaning: string;   // Meaning in Chinese
-  phonetic: string;      // Phonetic pronunciation, e.g. "/ˈsləʊli/"
-  exampleEn: string;     // Short original example sentence
-  exampleCn: string;     // Chinese explanation of the example
-  postmark: string;      // The thematic postmark symbol or title, e.g. "Raindrop", "Warm Candle"
+  word: string;
+  exampleEn: string;
+  exampleCn: string;
+  postmark: string;
 }
+

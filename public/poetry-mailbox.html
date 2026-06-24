@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remix: 每日诗歌信箱 | Standalone Edition</title>
+  
+  <!-- Premium Serifs and Hand-sketched Display Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Noto+Serif+SC:wght@300;400;500&family=Inter:wght@300;400;500;600&family=Kalam:wght@400;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'serif-en': ['Lora', 'Georgia', 'serif'],
+            'serif-zh': ['"Noto Serif SC"', '"STSong"', 'SimSun', 'serif'],
+            'sans-ui': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            'sketch': ['Kalam', 'Caveat', 'cursive', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Authentic Freehand Sketch Border Radii - wobbly hand-drawn feeling with variable stroke widths */
+    .sketch-border {
+      border-style: solid;
+      border-color: #171717;
+      border-width: 1.2px 0.9px 1.5px 1.1px;
+      border-radius: 255px 25px 225px 30px/30px 225px 25px 255px;
+    }
+
+    .sketch-border-v1 {
+      border-style: solid;
+      border-color: #171717;
+      border-width: 1.3px 0.8px 1.6px 1.1px;
+      border-radius: 255px 20px 220px 35px/35px 220px 20px 255px;
+    }
+
+    .sketch-border-v2 {
+      border-style: solid;
+      border-color: #171717;
+      border-width: 0.9px 1.5px 1.1px 1.3px;
+      border-radius: 30px 255px 35px 220px/220px 35px 255px 30px;
+    }
+
+    .sketch-border-v3 {
+      border-style: solid;
+      border-color: #171717;
+      border-width: 1.1px 0.9px 1.4px 1.6px;
+      border-radius: 220px 35px 240px 18px/18px 230px 35px 240px;
+    }
+
+    .sketch-border-v4 {
+      border-style: solid;
+      border-color: #171717;
+      border-width: 1.6px 0.9px 1.0px 1.2px;
+      border-radius: 25px 210px 30px 240px/240px 30px 210px 25px;
+    }
+
+    .sketch-border-v5 {
+      border-style: solid;
+      border-color: #171717;
+      border-width: 1.0px 1.2px 1.4px 0.9px;
+      border-radius: 245px 40px 230px 25px/25px 245px 40px 230px;
+    }
+
+    .sketch-border-v6 {
+      border-style: solid;
+      border-color: #171717;
+      border-width: 1.4px 1.4px 1.2px 1.5px;
+      border-radius: 35px 230px 45px 220px/220px 45px 235px 35px;
+    }
+
+    .sketch-border-sm {
+      border-style: solid;
+      border-color: #171717;
+      border-width: 0.9px 1.1px 1.0px 0.7px;
+      border-radius: 120px 15px 105px 12px/12px 110px 15px 125px;
+    }
+
+    .sketch-border-lg {
+      border-style: solid;
+      border-color: #171717;
+      border-width: 1.6px 1.1px 1.7px 1.3px;
+      border-radius: 350px 30px 320px 35px/35px 330px 30px 350px;
+    }
+
+    .sketch-border-btn {
+      border-style: solid;
+      border-color: #171717;
+      border-width: 1.0px 1.4px 1.2px 0.9px;
+      border-radius: 200px 18px 175px 14px/15px 180px 12px 200px;
+    }
+
+    .sketch-border-inactive {
+      border-style: solid;
+      border-color: #d4d4d4;
+      border-width: 1.0px 0.8px 1.2px 0.9px;
+      border-radius: 255px 25px 225px 30px/30px 225px 25px 255px;
+    }
+
+    .sketch-border-sm-inactive {
+      border-style: solid;
+      border-color: #d4d4d4;
+      border-width: 0.7px 0.9px 0.8px 0.6px;
+      border-radius: 120px 15px 105px 12px/12px 110px 15px 125px;
+    }
+
+    /* Custom realistic paper texture background */
+    .paper-texture {
+      background-color: #FAF7F0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='paperGrain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paperGrain)' opacity='0.7'/%3E%3C/svg%3E");
+    }
+
+    /* Custom premium card paper board */
+    .card-paper {
+      background-color: #FCFAF5;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='cardGrain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.02 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23cardGrain)' opacity='0.5'/%3E%3C/svg%3E");
+    }
+
+    /* Slow serene animations */
+    @keyframes delicateFloat {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+      100% { transform: translateY(0); }
+    }
+
+    .animate-gentle-float {
+      animation: delicateFloat 6s ease-in-out infinite;
+    }
+
+    /* Hide scrollbars but keep scrolling enabled */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* 3D Envelope folding transitions */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .preserve-3d {
+      transform-style: preserve-3d;
+    }
+    
+    /* Wax stamp dynamic seal press */
+    @keyframes waxStampPress {
+      0% { transform: scale(1.8) rotate(-15deg); opacity: 0; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.3)); }
+      60% { transform: scale(0.95) rotate(2deg); opacity: 1; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15)); }
+      80% { transform: scale(1.03) rotate(-1deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; filter: drop-shadow(0 4px 6px rgba(162,109,104,0.4)); }
+    }
+    .wax-stamp-appear {
+      animation: waxStampPress 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    /* Letter sliding down and falling parabolic path simulation */
+    @keyframes floatIntoBox {
+      0% { transform: translate(0, 0) scale(1) rotate(0); opacity: 1; }
+      40% { transform: translate(30px, -40px) scale(0.8) rotate(15deg); opacity: 0.9; }
+      100% { transform: translate(10px, 320px) scale(0.15) rotate(45deg); opacity: 0; }
+    }
+    .letter-collecting-flight {
+      animation: floatIntoBox 1.3s cubic-bezier(0.42, 0, 0.58, 1) forwards;
+    }
+  </style>
+
+  <!-- React & Babel CDNs -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="min-h-screen bg-neutral-100 font-sans-ui overflow-hidden select-none">
+  
+  <div id="root"></div>
+
+  <!-- COMPLETE APP SCRIPT -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- PROCEDURAL AUDIO SYNTHESIZERS (ZERO-LATENCY, CLIENT-SIDE) ---
+    const getAudioContext = () => {
+      try {
+        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtxClass) return null;
+        if (!window.__globalAudioCtx) {
+          window.__globalAudioCtx = new AudioCtxClass();
+        }
+        const ctx = window.__globalAudioCtx;
+        if (ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+        return ctx;
+      } catch (e) {
+        console.warn('AudioContext failed:', e);
+        return null;
+      }
+    };
+
+    // Synthesize Paper Creasing & Folding Sound ("krff-shhht-flpp")
+    const playPaperFoldSound = () => {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const bufferSize = ctx.sampleRate * 0.4;
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+
+      // 1. Fiber snapping noise
+      const src1 = ctx.createBufferSource();
+      src1.buffer = noiseBuffer;
+      const filter1 = ctx.createBiquadFilter();
+      filter1.type = 'highpass';
+      filter1.frequency.setValueAtTime(1800, now);
+      filter1.frequency.linearRampToValueAtTime(1200, now + 0.15);
+      const gain1 = ctx.createGain();
+      gain1.gain.setValueAtTime(0.001, now);
+      gain1.gain.linearRampToValueAtTime(0.06, now + 0.02);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+      src1.connect(filter1).connect(gain1).connect(ctx.destination);
+      src1.start(now);
+      src1.stop(now + 0.15);
+
+      // 2. Creasing slide noise
+      const src2 = ctx.createBufferSource();
+      src2.buffer = noiseBuffer;
+      const filter2 = ctx.createBiquadFilter();
+      filter2.type = 'bandpass';
+      filter2.Q.setValueAtTime(5.0, now);
+      filter2.frequency.setValueAtTime(900, now + 0.05);
+      filter2.frequency.exponentialRampToValueAtTime(1300, now + 0.2);
+      const gain2 = ctx.createGain();
+      gain2.gain.setValueAtTime(0.001, now + 0.05);
+      gain2.gain.linearRampToValueAtTime(0.04, now + 0.15);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+      src2.connect(filter2).connect(gain2).connect(ctx.destination);
+      src2.start(now + 0.05);
+      src2.stop(now + 0.4);
+    };
+
+    // Synthesize Slide Paper rustle into Envelope Card slot
+    const playEnvelopeInSound = () => {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const bufferSize = ctx.sampleRate * 0.6;
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+
+      const src = ctx.createBufferSource();
+      src.buffer = noiseBuffer;
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'bandpass';
+      filt.Q.setValueAtTime(4.0, now);
+      filt.frequency.setValueAtTime(500, now);
+      filt.frequency.exponentialRampToValueAtTime(1000, now + 0.15);
+      filt.frequency.exponentialRampToValueAtTime(600, now + 0.35);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.12, now + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+      src.connect(filt).connect(gain).connect(ctx.destination);
+      src.start(now);
+      src.stop(now + 0.5);
+    };
+
+    // Synthesize Wood keepsakes box copper locking shut thud
+    const playKeepsakeBoxSound = () => {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      // Click snap (Hardware latch)
+      const lat = ctx.createOscillator();
+      const latG = ctx.createGain();
+      lat.type = 'sine';
+      lat.frequency.setValueAtTime(1100, now);
+      latG.gain.setValueAtTime(0.05, now);
+      latG.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
+      lat.connect(latG).connect(ctx.destination);
+      lat.start(now); lat.stop(now + 0.02);
+
+      // Deep wood resonator thump
+      const thump = ctx.createOscillator();
+      const thumpG = ctx.createGain();
+      thump.type = 'triangle';
+      thump.frequency.setValueAtTime(150, now + 0.02);
+      thump.frequency.exponentialRampToValueAtTime(60, now + 0.15);
+      thumpG.gain.setValueAtTime(0.001, now + 0.02);
+      thumpG.gain.linearRampToValueAtTime(0.22, now + 0.04);
+      thumpG.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+      thump.connect(thumpG).connect(ctx.destination);
+      thump.start(now + 0.02); thump.stop(now + 0.25);
+    };
+
+    // Synthesize Mechanical Typewriter keystroke ticking
+    const playTypewriterTick = (isSpace = false) => {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const sampleRate = ctx.sampleRate;
+      const bufferSize = sampleRate * 0.06;
+      const buffer = ctx.createBuffer(1, bufferSize, sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      
+      // Space keys have a broader, woodier acoustic resonator frequency
+      filter.frequency.setValueAtTime(isSpace ? 450 : 950, now);
+      filter.Q.setValueAtTime(isSpace ? 2.5 : 4.5, now);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(isSpace ? 0.09 : 0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + (isSpace ? 0.05 : 0.035));
+
+      noise.connect(filter).connect(gain).connect(ctx.destination);
+      noise.start(now);
+      noise.stop(now + 0.06);
+
+      // Add a low mechanical block resonance thump behind it
+      const lowOsc = ctx.createOscillator();
+      const lowGain = ctx.createGain();
+      lowOsc.type = 'triangle';
+      lowOsc.frequency.setValueAtTime(isSpace ? 110 : 180, now);
+      lowOsc.frequency.exponentialRampToValueAtTime(45, now + 0.04);
+      lowGain.gain.setValueAtTime(0.04, now);
+      lowGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      lowOsc.connect(lowGain).connect(ctx.destination);
+      lowOsc.start(now);
+      lowOsc.stop(now + 0.05);
+    };
+
+    // Synthesize Typewriter Roller Return Slider scrape ("krshhh-click")
+    const playTypewriterReturnScrape = () => {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const bufferSize = ctx.sampleRate * 0.35;
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+
+      const src = ctx.createBufferSource();
+      src.buffer = noiseBuffer;
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'bandpass';
+      filt.Q.setValueAtTime(5.0, now);
+      filt.frequency.setValueAtTime(350, now);
+      filt.frequency.exponentialRampToValueAtTime(800, now + 0.18);
+      filt.frequency.exponentialRampToValueAtTime(450, now + 0.32);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.1, now + 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.34);
+
+      src.connect(filt).connect(gain).connect(ctx.destination);
+      src.start(now);
+      src.stop(now + 0.35);
+
+      // Carriage clamp click at end
+      const click = ctx.createOscillator();
+      const clickG = ctx.createGain();
+      click.type = 'sine';
+      click.frequency.setValueAtTime(1400, now + 0.32);
+      clickG.gain.setValueAtTime(0.08, now + 0.32);
+      clickG.gain.exponentialRampToValueAtTime(0.001, now + 0.34);
+      click.connect(clickG).connect(ctx.destination);
+      click.start(now + 0.32); click.stop(now + 0.35);
+    };
+
+    // Synthesize Retro Metal Bell Ringing sound ("ding!")
+    const playTypewriterBell = () => {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      // High principal frequency & secondary mechanical dish harmonic
+      const f1 = 2100;
+      const f2 = 3150;
+
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      const gain2 = ctx.createGain();
+
+      osc1.frequency.setValueAtTime(f1, now);
+      osc2.frequency.setValueAtTime(f2, now);
+
+      gain1.gain.setValueAtTime(0.06, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+
+      gain2.gain.setValueAtTime(0.03, now);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+      osc1.connect(gain1).connect(ctx.destination);
+      osc2.connect(gain2).connect(ctx.destination);
+
+      osc1.start(now); osc1.stop(now + 0.75);
+      osc2.start(now); osc2.stop(now + 0.5);
+    };
+
+
+    // --- DATA DICTIONARY: SELECTED 28 BEST REPRESENTATIVE POEMS & SENTENCES ---
+    const POEMS_DATA = [
+      {
+        id: "poem_001",
+        category: "soft_landing",
+        categoryTitle: "Soft Landing",
+        categoryDescription: "给疲惫的你，一封轻轻降落的信。",
+        targetWord: "restore",
+        phonetic: "/rɪˈstɔːr/",
+        partOfSpeech: "verb",
+        wordMeaning: "恢复 / 修复",
+        poem: "A quiet night\ncan restore the tired light.",
+        translation: "一个安静的夜晚，\n可以修复疲惫的光。",
+        example: "Sleep helps restore your energy.",
+        exampleTranslation: "睡眠有助于恢复精力。"
+      },
+      {
+        id: "poem_002",
+        category: "soft_landing",
+        categoryTitle: "Soft Landing",
+        categoryDescription: "给疲惫的你，一封轻轻降落的信。",
+        targetWord: "endure",
+        phonetic: "/ɪnˈdʊr/",
+        partOfSpeech: "verb",
+        wordMeaning: "忍耐 / 承受",
+        poem: "Some days are heavy,\nbut you do not have to endure them loudly.",
+        translation: "有些日子很沉，\n你不必大声地承受。",
+        example: "She had to endure a long wait.",
+        exampleTranslation: "她不得不忍受漫长的等待。"
+      },
+      {
+        id: "poem_003",
+        category: "soft_landing",
+        categoryTitle: "Soft Landing",
+        categoryDescription: "给疲惫的你，一封轻轻降落的信。",
+        targetWord: "fragile",
+        phonetic: "/ˈfrædʒəl/",
+        partOfSpeech: "adjective",
+        wordMeaning: "脆弱的",
+        poem: "Even fragile things\ncan hold a little morning.",
+        translation: "即使脆弱的东西，\n也能盛住一点清晨。",
+        example: "The glass is fragile.",
+        exampleTranslation: "这个玻璃杯很脆弱。"
+      },
+      {
+        id: "poem_004",
+        category: "soft_landing",
+        categoryTitle: "Soft Landing",
+        categoryDescription: "给疲惫的你，一封轻轻降落的信。",
+        targetWord: "shelter",
+        phonetic: "/ˈʃeltər/",
+        partOfSpeech: "noun / verb",
+        wordMeaning: "庇护 / 避难所",
+        poem: "Let the chair be\na small shelter for your tired body.",
+        translation: "让这把椅子，\n成为疲惫身体的小小庇护。",
+        example: "They found shelter from the rain.",
+        exampleTranslation: "他们找到了避雨的地方。"
+      },
+      {
+        id: "poem_005",
+        category: "soft_landing",
+        categoryTitle: "Soft Landing",
+        categoryDescription: "给疲惫的你，一封轻轻降落的信。",
+        targetWord: "release",
+        phonetic: "/rɪˈliːs/",
+        partOfSpeech: "verb / noun",
+        wordMeaning: "释放 / 松开",
+        poem: "Release the day\nfrom your closed hands.",
+        translation: "把这一天，\n从紧握的手里松开。",
+        example: "He released the bird into the sky.",
+        exampleTranslation: "他把鸟放回天空。"
+      },
+      {
+        id: "poem_011",
+        category: "soft_landing",
+        categoryTitle: "Soft Landing",
+        categoryDescription: "给疲惫的你，一封轻轻降落的信。",
+        targetWord: "tender",
+        phonetic: "/ˈtendər/",
+        partOfSpeech: "adjective",
+        wordMeaning: "温柔的 / 柔软的",
+        poem: "Be tender with yourself;\neven light arrives slowly.",
+        translation: "对自己温柔一点，\n连光也是慢慢抵达的。",
+        example: "She gave him a tender smile.",
+        exampleTranslation: "她给了他一个温柔的微笑。"
+      },
+      {
+        id: "poem_013",
+        category: "quiet_room",
+        categoryTitle: "Quiet Room",
+        categoryDescription: "给想安静的你，一间只属于自己的小房间。",
+        targetWord: "observe",
+        phonetic: "/əbˈzɜːrv/",
+        partOfSpeech: "verb",
+        wordMeaning: "观察",
+        poem: "I observe the dust\nmoving slowly in the light.",
+        translation: "我看见尘埃，\n在光里慢慢移动。",
+        example: "Scientists observe changes carefully.",
+        exampleTranslation: "科学家仔细观察变化。"
+      },
+      {
+        id: "poem_014",
+        category: "quiet_room",
+        categoryTitle: "Quiet Room",
+        categoryDescription: "给想安静的你，一间只属于自己的小房间。",
+        targetWord: "silence",
+        phonetic: "/ˈsaɪləns/",
+        partOfSpeech: "noun",
+        wordMeaning: "沉默 / 安静",
+        poem: "Silence sits beside me\nlike a folded letter.",
+        translation: "安静坐在我身边，\n像一封折好的信。",
+        example: "The room was filled with silence.",
+        exampleTranslation: "房间里一片安静。"
+      },
+      {
+        id: "poem_018",
+        category: "quiet_room",
+        categoryTitle: "Quiet Room",
+        categoryDescription: "给想安静的你，一间只属于自己的小房间。",
+        targetWord: "stillness",
+        phonetic: "/ˈstɪlnəs/",
+        partOfSpeech: "noun",
+        wordMeaning: "静止 / 安宁",
+        poem: "Stillness is not empty;\nit has its own sound.",
+        translation: "安静并不空，\n它有自己的声音。",
+        example: "I enjoyed the stillness of the lake.",
+        exampleTranslation: "我喜欢湖边的安宁。"
+      },
+      {
+        id: "poem_024",
+        category: "quiet_room",
+        categoryTitle: "Quiet Room",
+        categoryDescription: "给想安静的你，一间只属于自己的小房间。",
+        targetWord: "solitude",
+        phonetic: "/ˈsɑːlɪtuːd/",
+        partOfSpeech: "noun",
+        wordMeaning: "独处 / 孤独",
+        poem: "Solitude opens\na small window inside me.",
+        translation: "独处在我心里，\n打开一扇小窗。",
+        example: "He enjoys solitude after work.",
+        exampleTranslation: "他喜欢下班后的独处。"
+      },
+      {
+        id: "poem_025",
+        category: "rain_note",
+        categoryTitle: "Rain Note",
+        categoryDescription: "给情绪潮湿的你，一张雨天便笺。",
+        targetWord: "drizzle",
+        phonetic: "/ˈdrɪzəl/",
+        partOfSpeech: "noun / verb",
+        wordMeaning: "毛毛雨",
+        poem: "A soft drizzle\nwrites small lines on the glass.",
+        translation: "细雨在玻璃上，\n写下一行行小字。",
+        example: "A light drizzle began in the afternoon.",
+        exampleTranslation: "下午开始下起毛毛雨。"
+      },
+      {
+        id: "poem_027",
+        category: "rain_note",
+        categoryTitle: "Rain Note",
+        categoryDescription: "给情绪潮湿的你，一张雨天便笺。",
+        targetWord: "absorb",
+        phonetic: "/əbˈzɔːrb/",
+        partOfSpeech: "verb",
+        wordMeaning: "吸收",
+        poem: "The street absorbs the rain\nand becomes quiet.",
+        translation: "街道吸收了雨，\n也变得安静。",
+        example: "Plants absorb water from the soil.",
+        exampleTranslation: "植物从土壤中吸收水分。"
+      },
+      {
+        id: "poem_030",
+        category: "rain_note",
+        categoryTitle: "Rain Note",
+        categoryDescription: "给情绪潮湿的你，一张雨天便笺。",
+        targetWord: "dim",
+        phonetic: "/dɪm/",
+        partOfSpeech: "adjective",
+        wordMeaning: "昏暗的",
+        poem: "A dim lamp\nkeeps the rain company.",
+        translation: "一盏昏暗的灯，\n陪着雨。",
+        example: "The room was dim and quiet.",
+        exampleTranslation: "房间昏暗而安静。"
+      },
+      {
+        id: "poem_032",
+        category: "rain_note",
+        categoryTitle: "Rain Note",
+        categoryDescription: "给情绪潮湿的你，一张雨天便笺。",
+        targetWord: "mist",
+        phonetic: "/mɪst/",
+        partOfSpeech: "noun",
+        wordMeaning: "薄雾",
+        poem: "Mist covers the morning\nwith a thin white note.",
+        translation: "薄雾给清晨，\n盖上一张白色便笺。",
+        example: "Mist covered the mountains.",
+        exampleTranslation: "薄雾笼罩着群山。"
+      },
+      {
+        id: "poem_037",
+        category: "little_glow",
+        categoryTitle: "Little Glow",
+        categoryDescription: "给心里亮了一下的你，一封微光来信。",
+        targetWord: "radiant",
+        phonetic: "/ˈreɪdiənt/",
+        partOfSpeech: "adjective",
+        wordMeaning: "明亮的 / 闪亮的",
+        poem: "A radiant morning\ntouches the edge of my cup.",
+        translation: "明亮的早晨，\n碰了沉重的杯沿。",
+        example: "She looked radiant in the sunlight.",
+        exampleTranslation: "她在阳光下显得容光焕发。"
+      },
+      {
+        id: "poem_041",
+        category: "little_glow",
+        categoryTitle: "Little Glow",
+        categoryDescription: "给心里亮了一下的你，一封微光来信。",
+        targetWord: "warmth",
+        phonetic: "/wɔːrmθ/",
+        partOfSpeech: "noun",
+        wordMeaning: "温暖",
+        poem: "A little warmth\nstays inside the cup.",
+        translation: "一点温暖，\n还留在杯子里。",
+        example: "I felt the warmth of the sun.",
+        exampleTranslation: "我感受到了阳光的温暖。"
+      },
+      {
+        id: "poem_043",
+        category: "little_glow",
+        categoryTitle: "Little Glow",
+        categoryDescription: "给心里亮了一下的你，一封微光来信。",
+        targetWord: "cherish",
+        phonetic: "/ˈtʃerɪʃ/",
+        partOfSpeech: "verb",
+        wordMeaning: "珍惜",
+        poem: "I cherish this light\nbecause it asks for nothing.",
+        translation: "我珍惜这束光，\n因为它什么也不索取。",
+        example: "She cherishes her old letters.",
+        exampleTranslation: "她珍惜那些旧信。"
+      },
+      {
+        id: "poem_044",
+        category: "little_glow",
+        categoryTitle: "Little Glow",
+        categoryDescription: "给心里亮了一下的你，一封微光来信。",
+        targetWord: "bloom",
+        phonetic: "/bluːm/",
+        partOfSpeech: "verb / noun",
+        wordMeaning: "盛开 / 花朵",
+        poem: "A tiny joy\nblooms beside the window.",
+        translation: "一点小小的快乐，\n在窗边开了花。",
+        example: "Flowers bloom in spring.",
+        exampleTranslation: "花在春天盛开。"
+      },
+      {
+        id: "poem_049",
+        category: "far_away",
+        categoryTitle: "Far Away",
+        categoryDescription: "给想暂时离开的你，一点来自远方的信号。",
+        targetWord: "escape",
+        phonetic: "/ɪˈskeɪp/",
+        partOfSpeech: "verb / noun",
+        wordMeaning: "逃离 / 敞开",
+        poem: "I do not escape the day;\nI just open a farther window.",
+        translation: "我不是逃离这一天，\n只是打开一扇更远的窗。",
+        example: "They tried to escape the noise.",
+        exampleTranslation: "他们试图逃离噪音。"
+      },
+      {
+        id: "poem_050",
+        category: "far_away",
+        categoryTitle: "Far Away",
+        categoryDescription: "给想暂时离开的你，一点来自远方的信号。",
+        targetWord: "horizon",
+        phonetic: "/həˈraɪzən/",
+        partOfSpeech: "noun",
+        wordMeaning: "地平线",
+        poem: "The horizon keeps\na thin line of tomorrow.",
+        translation: "地平线保留着，\n一条细细的明天。",
+        example: "The sun rose above the horizon.",
+        exampleTranslation: "太阳从地平线上升起。"
+      },
+      {
+        id: "poem_051",
+        category: "far_away",
+        categoryTitle: "Far Away",
+        categoryDescription: "给想暂时离开的你，一点来自远方的信号。",
+        targetWord: "drift",
+        phonetic: "/drɪft/",
+        partOfSpeech: "verb / noun",
+        wordMeaning: "漂流 / 游荡",
+        poem: "Even clouds need\nsomewhere to drift.",
+        translation: "云也需要，\n一个可以漂走的地方。",
+        example: "My thoughts drift away at night.",
+        exampleTranslation: "我的思绪在夜里慢慢飘远。"
+      },
+      {
+        id: "poem_053",
+        category: "far_away",
+        categoryTitle: "Far Away",
+        categoryDescription: "给想暂时离开的你，一点来自远方的信号。",
+        targetWord: "distant",
+        phonetic: "/ˈdɪstənt/",
+        partOfSpeech: "adjective",
+        wordMeaning: "遥远的",
+        poem: "A distant light\nstill knows how to reach me.",
+        translation: "远处的光，\n仍然知道如何抵达我。",
+        example: "We saw a distant mountain.",
+        exampleTranslation: "我们看见一座远山。"
+      }
+    ];
+
+    const getFormattedDailyDate = () => {
+      const date = new Date();
+      return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    };
+
+    const getChineseDateSubtitle = () => {
+      const weekdayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+      const date = new Date();
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const weekday = weekdayNames[date.getDay()];
+      return `${month}月${day}日 · ${weekday}`;
+    };
+
+    // --- MAIN INTEGRATED APPLICATION COMPONENT ---
+    function App() {
+      const formattedDate = getFormattedDailyDate();
+      const chineseDate = getChineseDateSubtitle();
+
+      const [currentPhase, setCurrentPhase] = useState('mailbox'); // 'mailbox' | 'typewriter' | 'display' | 'cabinet'
+      const [currentLetter, setCurrentLetter] = useState(POEMS_DATA[0]);
+      const [activeCategory, setActiveCategory] = useState('all');
+      const [collectedLetters, setCollectedLetters] = useState(() => {
+        try {
+          const saved = localStorage.getItem('poetry_mailbox_collections_standalone');
+          return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+          return [];
+        }
+      });
+
+      // Special active envelope folded animation triggers
+      const [collectStep, setCollectStep] = useState(0); // 0: resting, 1: folding, 2: stamped, 3: flying/archived
+      const [isWhisperReading, setIsWhisperReading] = useState(false);
+      const synth = window.speechSynthesis;
+
+      // Handle Category pull-out triggering typewriter
+      const handlePullLetter = (categoryKey) => {
+        let candidates = POEMS_DATA;
+        if (categoryKey && categoryKey !== 'today') {
+          candidates = POEMS_DATA.filter(p => p.category === categoryKey);
+          setActiveCategory(categoryKey);
+        } else {
+          setActiveCategory('all');
+        }
+
+        if (!candidates.length) candidates = POEMS_DATA;
+        const randomIndex = Math.floor(Math.random() * candidates.length);
+        const selected = candidates[randomIndex];
+        
+        setCurrentLetter(selected);
+        setCollectStep(0); // Reset envelope folding steps
+        
+        // Voice stop
+        if (synth && synth.speaking) {
+          synth.cancel();
+          setIsWhisperReading(false);
+        }
+
+        // Trigger Audio Unlock
+        getAudioContext();
+
+        // Switch to Typewriter page
+        setCurrentPhase('typewriter');
+      };
+
+      // Typewriter Finished printing trigger
+      const handleTypewritingComplete = () => {
+        setCurrentPhase('display');
+      };
+
+      // Speak TTS text slowly
+      const triggerSpeech = (lyrics) => {
+        if (!synth) return;
+        if (synth.speaking) {
+          synth.cancel();
+          setIsWhisperReading(false);
+          return;
+        }
+
+        const cleanStr = lyrics.replace(/\n/g, ', ');
+        const utterance = new SpeechSynthesisUtterance(cleanStr);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.72; // slow pacing
+        utterance.pitch = 1.05;
+
+        utterance.onstart = () => setIsWhisperReading(true);
+        utterance.onend = () => setIsWhisperReading(false);
+        utterance.onerror = () => setIsWhisperReading(false);
+
+        // Find standard gentle voice package if possible
+        const voices = synth.getVoices();
+        const gentleVoice = voices.find(v => 
+          v.lang.startsWith('en') && 
+          (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Aria') || v.name.includes('Samantha'))
+        );
+        if (gentleVoice) utterance.voice = gentleVoice;
+
+        synth.speak(utterance);
+      };
+
+      // Auto TTS read on detail entrance
+      useEffect(() => {
+        if (currentPhase === 'display') {
+          const timeout = setTimeout(() => {
+            triggerSpeech(currentLetter.poem);
+          }, 600);
+          return () => clearTimeout(timeout);
+        } else {
+          if (synth && synth.speaking) {
+            synth.cancel();
+            setIsWhisperReading(false);
+          }
+        }
+      }, [currentPhase, currentLetter.id]);
+
+      // IMMERSIVE 4-STEP WAX STAMP COLLECTION PERFORMANCE
+      const handleCollectLetter = () => {
+        if (collectStep > 0) return; // Prevent multiple clicks
+
+        // Stop voice narration
+        if (synth && synth.speaking) {
+          synth.cancel();
+          setIsWhisperReading(false);
+        }
+
+        // Step 1: Slide paper into envelope card
+        setCollectStep(1);
+        playEnvelopeInSound();
+
+        // Step 2: Fold of flap down after sliding in
+        setTimeout(() => {
+          setCollectStep(2);
+          playPaperFoldSound();
+        }, 1100);
+
+        // Step 3: Crimson wax stamp impact
+        setTimeout(() => {
+          setCollectStep(3);
+          const exists = collectedLetters.some(item => item.id === currentLetter.id);
+          if (!exists) {
+            const updated = [currentLetter, ...collectedLetters];
+            setCollectedLetters(updated);
+            localStorage.setItem('poetry_mailbox_collections_standalone', JSON.stringify(updated));
+          }
+        }, 2100);
+
+        // Step 4: Parabolic sliding flight and keepsake box metal lock ring
+        setTimeout(() => {
+          setCollectStep(4);
+          playKeepsakeBoxSound();
+        }, 3400);
+
+        // Terminate and return options back to mailbox wall
+        setTimeout(() => {
+          setCurrentPhase('cabinet');
+          setCollectStep(0);
+        }, 4700);
+      };
+
+      // Keep safe cabinet action triggers
+      const handleRemoveCollected = (letter) => {
+        const remaining = collectedLetters.filter(item => item.id !== letter.id);
+        setCollectedLetters(remaining);
+        localStorage.setItem('poetry_mailbox_collections_standalone', JSON.stringify(remaining));
+      };
+
+      const handleOpenFromCabinet = (letter) => {
+        setCurrentLetter(letter);
+        setCollectStep(0);
+        // Direct jump to card render page bypass typewriter
+        setCurrentPhase('display');
+      };
+
+      // Export of Standalone self html file download trigger
+      const triggerDownloadPage = () => {
+        const htmlContent = document.documentElement.outerHTML;
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'poetry-mailbox-offline.html';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      return (
+        <div className="min-h-screen bg-neutral-100 flex items-center justify-center p-0 sm:p-4 md:p-6 select-none relative overflow-hidden">
+          
+          {/* BACKGROUND FLOATING DOODLES */}
+          <div className="absolute top-[8%] left-[7%] opacity-15 select-none pointer-events-none hidden lg:block">
+            <svg width="120" height="120" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" class="text-neutral-900">
+              <path d="M20 50 C20 30, 40 10, 50 20 C60 10, 80 30, 80 50 C80 75, 50 90, 50 90 C50 90, 20 75, 20 50 Z" />
+              <path d="M50 35 C55 45, 45 55, 50 65" strokeDasharray="3 3" />
+            </svg>
+            <p className="text-[11px] font-sketch text-center mt-2 font-bold rotate-[-6deg]">Poetry Is Here</p>
+          </div>
+          <div className="absolute bottom-[10%] right-[6%] opacity-15 select-none pointer-events-none hidden lg:block">
+            <svg width="140" height="140" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="0.8" class="text-neutral-900">
+              <circle cx="50" cy="50" r="30" strokeDasharray="2 4" />
+              <path d="M50 20 L50 80 M20 50 L80 50 M28 28 L72 72 M28 72 L72 28" />
+              <circle cx="50" cy="50" r="12" fill="none" strokeWidth="1.2" />
+            </svg>
+            <p className="text-[11px] font-sketch text-center mt-2 font-bold rotate-[12deg]">Distant Horizon</p>
+          </div>
+
+          <!-- HANDHELD PORTABLE DEVICE FRAME CONTAINER -->
+          <div 
+            className="w-full h-full sm:w-[410px] sm:h-[840px] sm:rounded-[36px] bg-white border-2 sm:border-8 border-neutral-900 relative flex flex-col justify-between overflow-hidden shadow-2xl"
+            id="phone-stage"
+          >
+            <!-- TOP APP PANEL COVER -->
+            <header className="px-5 pt-5 pb-4 flex items-center justify-between z-30 shrink-0 border-b-2 border-neutral-900 bg-white">
+              <div className="flex flex-col text-left">
+                <span className="font-serif-en italic font-bold text-sm tracking-wide text-neutral-950 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-neutral-950 animate-pulse"></span>
+                  Poetry Mailbox
+                </span>
+                <span className="text-[9px] text-neutral-400 font-mono mt-0.5 tracking-widest uppercase font-bold">
+                  每日诗歌信箱 · 单机珍藏版
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {currentPhase !== 'mailbox' && (
+                  <button 
+                    onClick={() => {
+                      if (synth) synth.cancel();
+                      setCurrentPhase('mailbox');
+                    }}
+                    className="w-8 h-8 bg-white hover:bg-neutral-50 flex items-center justify-center text-neutral-900 transition-all cursor-pointer shadow-[2px_2px_0px_#171717] active:translate-y-0.5 active:shadow-[0px_0px_0px] sketch-border-sm"
+                    title="回到信箱主页"
+                  >
+                    <!-- Inline SVG Mailbox Home -->
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5C2 7 4 5 6.5 5H18c2.2 0 4 1.8 4 4v8Z"></path>
+                      <polyline points="15,9 18,9 18,12"></polyline>
+                      <path d="M2 9.5 12 15l10-5.5"></path>
+                    </svg>
+                  </button>
+                )}
+
+                {currentPhase !== 'cabinet' && (
+                  <button 
+                    onClick={() => {
+                      if (synth) synth.cancel();
+                      setCurrentPhase('cabinet');
+                    }}
+                    className="w-8 h-8 bg-white hover:bg-neutral-50 flex items-center justify-center text-neutral-900 transition-all cursor-pointer shadow-[2px_2px_0px_#171717] active:translate-y-0.5 active:shadow-[0px_0px_0px] sketch-border-sm relative"
+                    title="打开收藏抽屉"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect width="20" height="9" x="2" y="3" rx="1"></rect>
+                      <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M9 16h6"></path>
+                    </svg>
+                    {collectedLetters.length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white font-mono text-[8px] font-black w-4.5 h-4.5 rounded-full border border-neutral-900 flex items-center justify-center scale-90">
+                        {collectedLetters.length}
+                      </span>
+                    )}
+                  </button>
+                )}
+                
+                {/* Standalone special download layout trigger */}
+                <button 
+                  onClick={triggerDownloadPage}
+                  className="w-8 h-8 bg-amber-50 hover:bg-amber-100 flex items-center justify-center text-neutral-900 transition-all cursor-pointer shadow-[2px_2px_0px_#171717] active:translate-y-0.5 active:shadow-[0px_0px_0px] sketch-border-sm"
+                  title="下载单机网页版本"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                </button>
+              </div>
+            </header>
+
+            <!-- CENTRAL SCENE DISPLAY PLATFORM -->
+            <main className="flex-grow px-5 py-4 flex flex-col justify-between gap-3 overflow-y-auto no-scrollbar z-10 bg-white relative">
+              
+              <!-- Daily calendar banner -->
+              <div className="w-full text-center shrink-0 mt-1 select-none">
+                <p className="text-base font-sketch tracking-wide font-extrabold text-neutral-950 uppercase">{formattedDate}</p>
+                <p className="text-[11px] text-neutral-500 font-sketch font-bold tracking-widest mt-0.5 uppercase">
+                  • {chineseDate} •
+                </p>
+              </div>
+
+              <!-- Content Stage View Router -->
+              <div className="flex-1 w-full flex flex-col min-h-[460px] relative">
+                
+                {/* PHASE 1: MAILBOX GRID COMPONENT */}
+                {currentPhase === 'mailbox' && (
+                  <div className="w-full h-full flex flex-col justify-between py-1">
+                    <div className="w-full text-center mt-2 mb-4">
+                      <p className="text-[12px] font-serif-zh font-bold text-neutral-600 tracking-wider">
+                        让英语学习变成最轻柔的一个动作。
+                      </p>
+                      <p className="text-[10px] text-neutral-400 mt-1 font-serif-zh italic">
+                        请轻触选择一份手写心情投递进行拆阅：
+                      </p>
+                    </div>
+
+                    <!-- Gird of 6 envelope drawers (Image 1 slots) -->
+                    <div className="grid grid-cols-2 gap-4 flex-1 items-center max-h-[360px] my-auto">
+                      
+                      <!-- Slot 01 -->
+                      <div 
+                        onClick={() => handlePullLetter('soft_landing')}
+                        className="bg-[#FCFAF5] p-3 text-center cursor-pointer transition-all duration-350 hover:-translate-y-1 hover:shadow-md sketch-border-v1 hover:border-black shadow-[3px_3px_0px_#171717] relative flex flex-col justify-between min-h-[96px]"
+                      >
+                        <div className="flex justify-between items-start text-stone-400">
+                          <span className="font-mono text-[9px] font-black tracking-widest">NO.01</span>
+                          <span className="text-[11px]">🍃</span>
+                        </div>
+                        <h4 className="font-sketch text-md font-black tracking-widest text-neutral-900 mt-1 uppercase">SOFT LANDING</h4>
+                        <span className="text-[10px] font-serif-zh text-neutral-400 font-medium tracking-wide mt-1 scale-90">温柔着陆 (疲惫)</span>
+                      </div>
+
+                      <!-- Slot 02 -->
+                      <div 
+                        onClick={() => handlePullLetter('quiet_room')}
+                        className="bg-[#FCFAF5] p-3 text-center cursor-pointer transition-all duration-350 hover:-translate-y-1 hover:shadow-md sketch-border-v2 hover:border-black shadow-[3px_3px_0px_#171717] relative flex flex-col justify-between min-h-[96px]"
+                      >
+                        <div className="flex justify-between items-start text-stone-400">
+                          <span className="font-mono text-[9px] font-black tracking-widest">NO.02</span>
+                          <span className="text-[11px]">🕯️</span>
+                        </div>
+                        <h4 className="font-sketch text-md font-black tracking-widest text-neutral-900 mt-1 uppercase">QUIET ROOM</h4>
+                        <span className="text-[10px] font-serif-zh text-neutral-400 font-medium tracking-wide mt-1 scale-90">安静角落 (独处)</span>
+                      </div>
+
+                      <!-- Slot 03 -->
+                      <div 
+                        onClick={() => handlePullLetter('rain_note')}
+                        className="bg-[#FCFAF5] p-3 text-center cursor-pointer transition-all duration-350 hover:-translate-y-1 hover:shadow-md sketch-border-v3 hover:border-black shadow-[3px_3px_0px_#171717] relative flex flex-col justify-between min-h-[96px]"
+                      >
+                        <div className="flex justify-between items-start text-stone-400">
+                          <span className="font-mono text-[9px] font-black tracking-widest">NO.03</span>
+                          <span className="text-[11px]">🌧️</span>
+                        </div>
+                        <h4 className="font-sketch text-md font-black tracking-widest text-neutral-900 mt-1 uppercase">RAIN NOTE</h4>
+                        <span className="text-[10px] font-serif-zh text-neutral-400 font-medium tracking-wide mt-1 scale-90">下雨日记 (潮湿)</span>
+                      </div>
+
+                      <!-- Slot 11 - MAIN TODAY'S LETTER -->
+                      <div 
+                        onClick={() => handlePullLetter('today')}
+                        className="bg-amber-50/50 p-3 text-center cursor-pointer transition-all duration-350 hover:-translate-y-1.5 hover:shadow-lg hover:border-red-600 sketch-border-v4 shadow-[4px_4px_0px_#915B56] relative flex flex-col justify-between min-h-[106px] overflow-visible border-red-950/40"
+                      >
+                        <!-- Peeking Letter Tongue animated -->
+                        <span className="absolute -top-3 left-[30%] bg-red-600 text-white font-sketch font-bold text-[9px] px-2 py-0.5 rounded-full border border-neutral-950 shadow-sm animate-bounce flex items-center gap-1">
+                          For You ✉
+                        </span>
+                        
+                        <div className="flex justify-between items-start text-red-700/60 font-semibold mt-1">
+                          <span className="font-mono text-[10px] font-black tracking-widest">NO.11</span>
+                          <span className="text-[12px] animate-pulse">📮</span>
+                        </div>
+                        <h4 className="font-sketch text-[15px] font-black tracking-widest text-neutral-950 uppercase mt-1">TODAY'S POST</h4>
+                        <span className="text-[10.5px] font-serif-zh text-red-800 font-extrabold tracking-widest mt-1">今日手稿来信</span>
+                      </div>
+
+                      <!-- Slot 04 -->
+                      <div 
+                        onClick={() => handlePullLetter('far_away')}
+                        className="bg-[#FCFAF5] p-3 text-center cursor-pointer transition-all duration-350 hover:-translate-y-1 hover:shadow-md sketch-border-v5 hover:border-black shadow-[3px_3px_0px_#171717] relative flex flex-col justify-between min-h-[96px]"
+                      >
+                        <div className="flex justify-between items-start text-stone-400">
+                          <span className="font-mono text-[9px] font-black tracking-widest">NO.04</span>
+                          <span className="text-[11px]">🧭</span>
+                        </div>
+                        <h4 className="font-sketch text-md font-black tracking-widest text-neutral-900 mt-1 uppercase">FAR AWAY</h4>
+                        <span className="text-[10px] font-serif-zh text-neutral-400 font-medium tracking-wide mt-1 scale-90">去往远方 (逃离)</span>
+                      </div>
+
+                      <!-- Slot 05 -->
+                      <div 
+                        onClick={() => handlePullLetter('little_glow')}
+                        className="bg-[#FCFAF5] p-3 text-center cursor-pointer transition-all duration-350 hover:-translate-y-1 hover:shadow-md sketch-border-v6 hover:border-black shadow-[3px_3px_0px_#171717] relative flex flex-col justify-between min-h-[96px]"
+                      >
+                        <div className="flex justify-between items-start text-stone-400">
+                          <span className="font-mono text-[9px] font-black tracking-widest">NO.05</span>
+                          <span className="text-[11px]">✨</span>
+                        </div>
+                        <h4 className="font-sketch text-md font-black tracking-widest text-neutral-900 mt-1 uppercase">LITTLE GLOW</h4>
+                        <span className="text-[10px] font-serif-zh text-neutral-400 font-medium tracking-wide mt-1 scale-90">微光闪烁 (晴朗)</span>
+                      </div>
+
+                    </div>
+
+                    <!-- Bottom branding note -->
+                    <div className="w-full flex justify-between items-center px-4 py-2 mt-2 bg-[#FAF9F5] sketch-border-sm scale-95 border-neutral-300">
+                      <span className="text-[9px] font-sketch font-bold text-stone-500">Stand-Alone KeepSafe Shell</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      <span className="text-[8.5px] font-mono text-stone-400">Archived 22+ Poetry Sheets</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* PHASE 2: GERMAN MECHANICAL TYPEWRITER PRINTING STAGE */}
+                {currentPhase === 'typewriter' && (
+                  <TypewriterMachine COMPONENT poemStr={currentLetter.poem} onFinish={handleTypewritingComplete} />
+                )}
+
+                {/* PHASE 3: POEM LETTER DISPLAY PANEL & AUDIO DISPATCH */}
+                {currentPhase === 'display' && (
+                  <div className="w-full flex-1 flex flex-col justify-between py-1 relative">
+                    
+                    {/* ENVELOPE FOLDING CHOREOGRAPHY MASK CONTAINER */}
+                    {collectStep > 0 ? (
+                      <div className="w-full flex-1 flex flex-col items-center justify-center p-4">
+                        <div 
+                          className={`relative w-[280px] h-[190px] rounded-lg bg-[#EABFA] transition-all duration-700 perspective-1000 ${
+                            collectStep >= 4 ? 'letter-collecting-flight' : 'shadow-xl'
+                          }`}
+                        >
+                          {/* Inside Back wall */}
+                          <div className="absolute inset-0 bg-[#E8E1D5] rounded-lg border border-[#DDD5C7] overflow-hidden">
+                            <div className="absolute inset-0 opacity-10 bg-radial-gradient"></div>
+                          </div>
+
+                          {/* Paper sheet sliding in */}
+                          <div 
+                            className={`absolute inset-x-4 bottom-5 bg-[#FCFAF5] rounded-md border border-[#ECE6DB] flex flex-col p-4 justify-between z-15 pointer-events-none transition-all duration-[1100ms] ${
+                              collectStep >= 1 ? 'translate-y-4 opacity-70 scale-95' : '-translate-y-18 opacity-100'
+                            }`}
+                            style={{ height: '140px' }}
+                          >
+                            <div className="border-b border-[#EBE3D4] pb-1 flex justify-between items-center">
+                              <span className="font-serif-en italic text-[11px] text-[#A69E8F]">Dear you,</span>
+                              <span className="w-2 h-2 rounded-full bg-[#8A9A84]/40" />
+                            </div>
+                            <div className="w-[85%] h-1.5 bg-[#EFECE3] rounded-sm pt-2" />
+                            <div className="w-[60%] h-1.5 bg-[#EFECE3] rounded-sm" />
+                            <div className="w-[30%] h-1.5 bg-[#EFECE3] rounded-sm" />
+                          </div>
+
+                          {/* Inner flap svg geometry */}
+                          <div className="absolute inset-x-0 bottom-0 h-[100px] z-20 pointer-events-none">
+                            <svg className="w-full h-full" viewBox="0 0 280 100" fill="none">
+                              <path d="M0 100 L120 45 C132 40, 148 40, 160 45 L280 100" fill="#EADBC8" stroke="#DCD0BD" strokeWidth="1" />
+                            </svg>
+                          </div>
+                          <div className="absolute inset-x-0 bottom-0 h-[110px] z-20 pointer-events-none">
+                            <svg className="w-full h-full" viewBox="0 0 280 110" fill="none">
+                              <path d="M0 110 L122 25 C131 20, 149 20, 158 25 L280 110 Z" fill="#E6DAC9" stroke="#DDD1BF" strokeWidth="1" />
+                            </svg>
+                          </div>
+
+                          {/* Poststamp sticker */}
+                          <div className="absolute right-4 bottom-5 bg-[#FCFAF5] w-9 h-11 border border-dashed border-[#C0B5A1] flex flex-col items-center justify-between p-1 shadow-sm rotate-[12deg] z-21">
+                            <span className="text-[7px] font-mono text-stone-400 uppercase tracking-widest leading-none scale-85">POST</span>
+                            <span className="text-[7px] font-sketch font-bold scale-[0.8] text-stone-600">{currentLetter.categoryTitle}</span>
+                          </div>
+
+                          {/* Wax Stamp Seal Trigger */}
+                          {collectStep >= 3 && (
+                            <div className="absolute left-[140px] -translate-x-1/2 bottom-8 z-25 pointer-events-none">
+                              <div className="w-10 h-10 rounded-full bg-[#A26D68] shadow-[0_2px_8px_rgba(162,109,104,0.3)] border-2 border-[#915B56] flex items-center justify-center text-[#F5EDE8] relative wax-stamp-appear">
+                                <div className="absolute inset-0.5 rounded-full border border-dashed border-[#F5EDE8]/40" />
+                                <span className="text-[8px] tracking-widest font-serif-en opacity-80 scale-[0.85] font-semibold text-center leading-none">POEM</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Envelope Folder Top cover Lid pivoting on rotateX */}
+                          <div 
+                            className="absolute inset-x-0 top-0 h-[92px] pointer-events-none origin-top transition-all duration-[600ms] preserve-3d"
+                            style={{ 
+                              transform: collectStep >= 2 ? 'rotateX(180deg)' : 'rotateX(0deg)',
+                              zIndex: collectStep >= 2 ? '5' : '30'
+                            }}
+                          >
+                            <svg className="w-full h-full drop-shadow-[0_4px_6px_rgba(0,0,0,0.06)]" viewBox="0 0 280 92" fill="none">
+                              <path d="M0 0 L124 81 C133 87, 147 87, 156 81 L280 0 Z" fill="#F0E5D5" stroke="#DDD2C1" strokeWidth="1" />
+                            </svg>
+                          </div>
+
+                          <div className="absolute left-6 top-8 z-22 select-none">
+                            <p className="font-serif-en italic text-[#908676] text-[13px] font-medium opacity-80">Dear You,</p>
+                            <p className="font-serif-zh text-[10px] text-[#A89F90] tracking-widest pl-1 mt-0.5 font-bold">手写信笺投递中···</p>
+                          </div>
+                        </div>
+
+                        <p className="mt-8 text-xs text-[#915B56] font-serif-zh tracking-widest animate-pulse font-bold">
+                          {collectStep === 1 && "正在将纸滑入信封槽内..."}
+                          {collectStep === 2 && "折叠翻面，紧固压痕..."}
+                          {collectStep === 3 && "正在滴注赤色蜡印，烙刻火漆..."}
+                          {collectStep === 4 && "封缄妥帖，飞归珍藏首饰盒！"}
+                        </p>
+                      </div>
+                    ) : (
+                      /* ORIGINAL RAW WRITING LETTER CARD */
+                      <div className="w-full flex-1 flex flex-col justify-between">
+                        
+                        <!-- Premium paper card wrapper -->
+                        <div className="w-full relative card-paper p-5 sketch-border flex-1 flex flex-col justify-between border-neutral-900 shadow-[5px_5px_0px_#171717] min-h-[380px] overflow-hidden animate-gentle-float">
+                          
+                          <!-- Handdrawn ambient coffee doodle right corner -->
+                          <div className="absolute top-2.5 right-3 opacity-15 rotate-[8deg] pointer-events-none select-none">
+                            <svg width="40" height="40" viewBox="0 0 50 50" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <path d="M10 25 C10 15, 35 15, 35 25 C35 32, 10 32, 10 25 Z" />
+                              <path d="M35 18 C40 18, 43 21, 41 24 C39 26, 35 25, 35 25" />
+                              <path d="M8 35 L37 35 M32 35 C32 38, 20 42, 15 35" />
+                              <path d="M16 12 C18 10, 16 7, 18 5 M22 13 C24 11, 22 8, 24 6 M28 13 C30 11, 28 8, 30 6" strokeDasharray="1.5 1.5" />
+                            </svg>
+                          </div>
+
+                          <!-- Handdrawn flower vase doodle bottom left corner -->
+                          <div className="absolute bottom-2.5 left-2 opacity-12 rotate-[-5deg] pointer-events-none select-none">
+                            <svg width="35" height="55" viewBox="0 0 40 60" fill="none" stroke="currentColor" strokeWidth="1.2">
+                              <path d="M10 50 L30 50 Q35 50, 32 30 Q27 15, 27 5 L13 5 Q13 15, 8 30 Q5 50, 10 50 Z" />
+                              <path d="M13 5 C15 -5, 25 -5, 27 5" />
+                              <path d="M20 5 L20 -15 M20 -8 C10 -18, 12 -22, 20 -8 M20 -6 C30 -14, 27 -18, 20 -6" />
+                              <path d="M15 15 L25 15 M10 30 L30 30 M7 42 L33 42" strokeDasharray="1 2" />
+                            </svg>
+                          </div>
+
+                          <!-- Top postmark category label -->
+                          <div className="flex justify-between items-center border-b border-dashed border-neutral-300 pb-2 mb-3 shrink-0">
+                            <span className="font-sketch font-extrabold text-[#915B56] text-xs uppercase tracking-widest flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                              Category: {currentLetter.categoryTitle}
+                            </span>
+                            <span className="font-mono text-[9px] text-neutral-400 font-bold uppercase">No. {currentLetter.id.split('_')[1]}</span>
+                          </div>
+
+                          <!-- Centered vocabulary target block (PRD 3.3) -->
+                          <div className="bg-[#FAF7F0] p-3.5 sketch-border-sm border-neutral-800 shrink-0 mb-4 shadow-[1.5px_1.5px_0px_#171717] relative">
+                            <div className="flex justify-between items-baseline flex-wrap">
+                              <div className="flex items-baseline gap-2">
+                                <h3 className="font-serif-en font-extrabold text-[15px] text-neutral-900 tracking-wide">{currentLetter.targetWord}</h3>
+                                <span className="font-mono text-[10px] text-neutral-400 italic scale-90">({currentLetter.partOfSpeech})</span>
+                              </div>
+                              <span className="font-mono text-[10.5px] text-neutral-500 font-bold">{currentLetter.phonetic}</span>
+                            </div>
+                            <p className="font-serif-zh text-[11px] text-neutral-600 mt-1 font-bold">释义：{currentLetter.wordMeaning}</p>
+                            
+                            <div className="mt-2 pt-1.5 border-t border-dashed border-stone-200 text-left">
+                              <p className="text-[10px] font-serif-en italic text-neutral-500 font-medium leading-relaxed">Ex: {currentLetter.example}</p>
+                              <p className="text-[9.5px] font-serif-zh font-bold text-neutral-400 mt-0.5 leading-relaxed">译: {currentLetter.exampleTranslation}</p>
+                            </div>
+                          </div>
+
+                          <!-- Core poem text lines left-align inside centering card (PRD 3.3) -->
+                          <div className="flex-grow flex flex-col justify-center py-4 px-1 select-text">
+                            <div className="w-fit mx-auto text-left">
+                              <!-- English verse (elegant Serif Lora) -->
+                              <div className="font-serif-en font-black text-[13px] md:text-[13.5px] text-neutral-900 leading-relaxed tracking-wide italic whitespace-pre-line">
+                                {currentLetter.poem}
+                              </div>
+                              <!-- Chinese verse (classic Song SC) -->
+                              <div className="font-serif-zh font-bold text-[10px] text-[#8C8370] mt-3 whitespace-pre-line border-t border-neutral-100/60 pt-2 leading-relaxed tracking-widest pl-0.5">
+                                {currentLetter.translation}
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Post Envelope control buttons layout -->
+                          <div className="mt-4 pt-2.5 border-t border-neutral-200 shrink-0 flex items-center justify-between">
+                            
+                            <!-- Audio slow reader button (PRD 3.3) -->
+                            <button 
+                              onClick={() => triggerSpeech(currentLetter.poem)}
+                              className={`w-9 h-9 flex items-center justify-center bg-white hover:bg-neutral-50 transition-all cursor-pointer shadow-[2px_2px_0px_#171717] active:translate-y-0.5 active:shadow-[0px_0px_0px] sketch-border-sm relative ${
+                                isWhisperReading ? 'bg-amber-50 text-red-700 animate-pulse' : 'text-neutral-900'
+                              }`}
+                              title={isWhisperReading ? "结束慢读" : "慢速英语朗读手稿"}
+                            >
+                              {isWhisperReading ? (
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <circle cx="12" cy="12" r="10"></circle>
+                                  <line x1="10" y1="15" x2="10" y2="9"></line>
+                                  <line x1="14" y1="15" x2="14" y2="9"></line>
+                                </svg>
+                              ) : (
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14 M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                </svg>
+                              )}
+                            </button>
+
+                            <!-- Fold/Wax Stamp Collect Button (PRD 3.3) -->
+                            <button 
+                              onClick={handleCollectLetter}
+                              className="bg-[#A26D68] text-[#F5EDE8] font-sketch font-black text-[12px] px-5 py-2 hover:bg-[#8D5854] cursor-pointer shadow-[3px_3px_0px_#171717] active:translate-y-0.5 active:shadow-[0px_0px_0px] sketch-border-btn tracking-widest relative"
+                            >
+                              收藏此信 📿
+                            </button>
+
+                            <!-- Draw another postcard/Pass Card button -->
+                            <button 
+                              onClick={() => handlePullLetter(activeCategory)}
+                              className="w-9 h-9 bg-white hover:bg-neutral-50 flex items-center justify-center text-stone-900 transition-all cursor-pointer shadow-[2px_2px_0px_#171717] active:translate-y-0.5 active:shadow-[0px_0px_0px] sketch-border-sm"
+                              title="寻找下一封奇遇诗笺"
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                              </svg>
+                            </button>
+
+                          </div>
+                        </div>
+
+                        <!-- Mini back navigation note -->
+                        <div className="w-full text-center mt-3 scale-95 shrink-0">
+                          <button 
+                            onClick={() => setCurrentPhase('mailbox')}
+                            className="bg-transparent hover:underline text-[10.5px] font-sketch font-bold text-stone-400 cursor-pointer"
+                          >
+                            ← BACK TO MAILBOX WALL 格墙主页
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                )}
+
+                {/* PHASE 4: RETRO WOOD CHEST SECTIONS ARCHIVES */}
+                {currentPhase === 'cabinet' && (
+                  <div className="w-full h-full flex flex-col justify-between bg-white min-h-[485px]">
+                    
+                    <div className="w-full flex justify-between items-center border-b border-dashed border-neutral-300 pb-2 mb-3">
+                      <h4 className="font-sketch font-black text-md text-neutral-800 tracking-wide flex items-center gap-1">
+                        📦 KEEPSAKE DRAWER / 珍藏柜
+                      </h4>
+                      <button 
+                        onClick={() => setCurrentPhase('mailbox')}
+                        className="text-[10px] font-sketch font-bold text-neutral-800 px-3 py-1 bg-white hover:bg-stone-50 transition-colors sketch-border-sm cursor-pointer shadow-[1px_1px_0px_#000]"
+                      >
+                        BACK 返回
+                      </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto no-scrollbar py-1 min-h-[365px] max-h-[440px]">
+                      {collectedLetters.length === 0 ? (
+                        /* Empty state keepsake drawer */
+                        <div className="w-full flex flex-col items-center justify-center py-6 px-4 text-center">
+                          
+                          <!-- Handdrawn Keepsake box illustration SVG -->
+                          <div className="w-[180px] h-[120px] relative border-2 border-stone-800 rounded-lg p-2 bg-[#F6F3EB] shadow-md flex items-center justify-center mb-6">
+                            <div className="absolute top-0 inset-x-0 h-4 bg-stone-700/10 rounded-t-sm border-b border-stone-800"></div>
+                            <div className="w-12 h-14 bg-white/40 border border-stone-800/60 rounded flex flex-col p-1 justify-between rotate-[-12deg] relative">
+                              <span className="text-[6px] font-mono select-none">No. 011</span>
+                              <p className="text-[5px] text-stone-400 leading-none">Lorem ipsum donor</p>
+                              <div className="w-1.5 h-1.5 rounded-full bg-stone-500/30 absolute right-1 bottom-1"></div>
+                            </div>
+                            <div className="w-12 h-14 bg-amber-50/70 border border-stone-850/70 rounded flex flex-col p-1 justify-between rotate-[8deg] absolute top-5 shadow-xs z-10">
+                              <span className="text-[6px] font-serif-en italic">Dear you,</span>
+                              <div className="w-4.5 h-4.5 rounded-full bg-[#A26D68]/85 border border-[#915B56]/50 mx-auto opacity-70"></div>
+                            </div>
+                          </div>
+
+                          <span className="text-stone-400 font-sketch text-lg mb-1">✿</span>
+                          <h3 className="font-sketch text-[13px] font-extrabold tracking-widest text-[#915B56] uppercase">KEEPSAKE CHEST IS EMPTY</h3>
+                          <p className="text-[10px] font-serif-zh font-bold text-stone-400 tracking-wider max-w-[240px] leading-relaxed mt-2">
+                            阁下尚未收纳任何手写诗笺信札。赶紧回去抽出珍贵信，加印火漆收藏至此吧。
+                          </p>
+                          <button 
+                            onClick={() => setCurrentPhase('mailbox')}
+                            className="mt-4 font-sketch font-extrabold text-[11px] px-4 py-1.5 bg-[#FCFAF5] hover:bg-amber-50 sketch-border-sm cursor-pointer shadow-[2px_2px_0px_#171717] active:translate-y-0.5 active:shadow-[0px_0px_0px] text-stone-800"
+                          >
+                            GO EXPLORE 去抽信
+                          </button>
+                        </div>
+                      ) : (
+                        /* List of collected envelopes */
+                        <div className="w-full flex flex-col gap-4">
+                          
+                          {/* Top wooden illustrated keepsakes chest box decoration model */}
+                          <div className="w-fit mx-auto text-center p-3.5 bg-[#FAF7F0] border-2 border-stone-900 rounded-md shadow-md mb-2 relative">
+                            <span className="absolute -top-2.5 left-6 bg-[#915B56] text-white font-mono text-[7.5px] py-0.5 px-2 rounded-full border border-stone-900 uppercase">Cabinet Shelf</span>
+                            <div className="flex gap-2.5 items-center">
+                              <div className="w-11 h-12 bg-[#8A9A84]/15 border border-dashed border-stone-800 rounded-sm p-1 rotate-[-10deg] flex flex-col justify-between">
+                                <span className="text-[5px] text-stone-400">01</span>
+                                <div className="w-3.5 h-3.5 rounded-full bg-stone-300"></div>
+                              </div>
+                              <div className="text-left">
+                                <p className="font-sketch font-bold text-[12.5px] text-neutral-800 leading-none">Keepsakes Safety Vault</p>
+                                <p className="text-[9px] font-serif-zh text-stone-400 mt-1">您在此共珍藏了 {collectedLetters.length} 件火漆封套手纸</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3 px-1">
+                            {collectedLetters.map((letter, idx) => (
+                              <div 
+                                key={letter.id} 
+                                className="flex items-center justify-between p-3 card-paper sketch-border-sm border-neutral-800 hover:border-black transition-all hover:-translate-y-0.5 shadow-[2px_2px_0px_#171717]"
+                              >
+                                <div 
+                                  onClick={() => handleOpenFromCabinet(letter)}
+                                  className="flex-1 flex items-center gap-3.5 cursor-pointer text-left"
+                                >
+                                  <div className="w-10 h-8 rounded bg-[#F4EBE2] border border-stone-350/70 shadow-2xs shrink-0 flex items-center justify-center relative">
+                                    <div className="w-3 h-3 rounded-full bg-[#A3736F] border border-[#915B56]"></div>
+                                    <span className="absolute -top-1 -left-1 bg-neutral-900 text-white font-mono text-[6.5px] w-3 h-3 rounded-full flex items-center justify-center scale-85">
+                                      {idx + 1}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <h5 className="font-serif-en font-extrabold text-[12px] text-neutral-900 truncate max-w-[110px]">{letter.targetWord}</h5>
+                                      <span className="font-sketch font-extrabold text-[9px] text-[#915B56] uppercase tracking-wider">({letter.categoryTitle})</span>
+                                    </div>
+                                    <p className="font-serif-zh text-[10.5px] text-stone-400 truncate mt-0.5 max-w-[180px]">{letter.poem.split('\n')[0]}</p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 shrink-0 pl-1.5">
+                                  <button 
+                                    onClick={() => handleOpenFromCabinet(letter)}
+                                    className="w-7 h-7 bg-[#FCFAF5] border border-stone-800 text-[10px] text-neutral-950 hover:bg-neutral-50 rounded flex items-center justify-center cursor-pointer shadow-[1px_1px_0px_#000]"
+                                    title="再次阅读并倾听"
+                                  >
+                                    📖
+                                  </button>
+                                  <button 
+                                    onClick={() => handleRemoveCollected(letter)}
+                                    className="w-7 h-7 bg-red-50 hover:bg-red-100 text-[10px] border border-dashed border-red-500 rounded flex items-center justify-center text-red-700 cursor-pointer"
+                                    title="移出藏书盒外"
+                                  >
+                                    🗑️
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                        </div>
+                      )}
+                    </div>
+
+                    <!-- Mini branding download trigger -->
+                    <div className="w-full text-center mt-3 scale-95 shrink-0">
+                      <p className="text-[9px] font-mono text-stone-400">Standalone browser persistent engine (LocalStorage)</p>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </main>
+
+            <!-- FOOTER STAMP FRAME CREDIT -->
+            <footer className="px-5 py-3 border-t-2 border-neutral-900 shrink-0 text-center select-none bg-[#FAF9F5] z-10">
+              <span className="font-sketch text-[10.5px] font-bold text-neutral-500 tracking-wider">
+                Crafted with love · For Quiet Afternoons ✿
+              </span>
+            </footer>
+
+          </div>
+        </div>
+      );
+    }
+
+    // --- SECONDARY VIEW COMPONENT: TYPEWRITER REPLICATING ORIGINAL CORE MECHANICAL NOISE ENGINE ---
+    function TypewriterMachine({ poemStr, onFinish }) {
+      const [printedLetters, setPrintedLetters] = useState("");
+      const [isCarriageDamping, setIsCarriageDamping] = useState(false);
+      const textArray = poemStr.replace(/\n/g, ' ↲ ').split(''); // represent return layout symbol with ↲
+      const textIndexRef = useRef(0);
+      const outputIntervalRef = useRef(null);
+
+      // Procedural typographic wave characters popping up on hits
+      const [splashes, setSplashes] = useState([]);
+
+      const playTypewriterMechanic = (char) => {
+        if (char === ' ') {
+          playTypewriterTick(true);
+        } else if (char === '↲' || char === '\n') {
+          playTypewriterReturnScrape();
+          // Add bell chime every transition feed
+          playTypewriterBell();
+        } else {
+          playTypewriterTick(false);
+        }
+      };
+
+      useEffect(() => {
+        const typingDelay = 110; // average key speeds
+
+        outputIntervalRef.current = setInterval(() => {
+          if (textIndexRef.current < textArray.length) {
+            const nextChar = textArray[textIndexRef.current];
+            
+            // Map return char back to layout newline
+            const charToRender = nextChar === '↲' ? '\n' : nextChar;
+            setPrintedLetters(p => p + charToRender);
+            playTypewriterMechanic(nextChar);
+
+            // Trigger mechanical splatter waves
+            if (nextChar !== ' ') {
+              const seedId = Math.random().toString(36).substring(4);
+              const driftX = Math.random() * 60 - 30; // wider randomness
+              const driftY = Math.random() * -50 - 20;
+              const randomDeg = Math.random() * 30 - 15;
+              const newSplash = { id: seedId, txt: nextChar === '↲' ? '🔔' : nextChar, x: driftX, y: driftY, r: randomDeg };
+              setSplashes(prev => [...prev.slice(-8), newSplash]); // keep only latest 8 splash coordinates
+            }
+
+            textIndexRef.current += 1;
+          } else {
+            clearInterval(outputIntervalRef.current);
+            setTimeout(() => {
+              onFinish();
+            }, 1000);
+          }
+        }, typingDelay);
+
+        return () => {
+          if (outputIntervalRef.current) clearInterval(outputIntervalRef.current);
+        };
+      }, [poemStr]);
+
+      return (
+        <div className="w-full flex-1 flex flex-col justify-between py-1 text-center select-none">
+          
+          <div className="w-full text-center mt-2 shrink-0">
+            <span className="font-sketch font-extrabold text-[13px] text-[#A26D68] uppercase tracking-widest animate-pulse flex items-center justify-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#A26D68]/80 animate-ping"></span>
+              Typewriter Engraving
+            </span>
+            <p className="text-[10px] font-serif-zh font-bold text-neutral-400 mt-1">
+              打字机撞针击打中，正在为您敲墨落拓纸笺：
+            </p>
+          </div>
+
+          <!-- MECHANICAL WORK ENGINE VISUALIZATION (PRD 3.2) -->
+          <div className="flex-1 my-6 flex flex-col justify-center items-center relative min-h-[220px]">
+            
+            <!-- Typewriter character mechanical splatter visual container -->
+            <div className="absolute top-[28%] left-1/2 -translate-x-1/2 pointer-events-none w-full h-15 overflow-visible z-20">
+              {splashes.map(sp => (
+                <div 
+                  key={sp.id}
+                  className="absolute left-1/2 -translate-x-1/2 text-lg font-serif-en font-black text-stone-900/40 select-none animate-[ping_0.6s_ease-out_forwards]"
+                  style={{
+                    transform: `translate(${sp.x}px, ${sp.y}px) rotate(${sp.r}deg)`
+                  }}
+                >
+                  {sp.txt}
+                </div>
+              ))}
+            </div>
+
+            <!-- Authentic retro mechanics model SVG outline (Image 2 representation) -->
+            <div className="w-full max-w-[210px] relative pointer-events-none select-none my-2 shrink-0">
+              <svg viewBox="0 0 100 80" fill="none" stroke="currentColor" strokeWidth="1.2" class="text-neutral-900 mx-auto">
+                {/* Roll paper barrel cylinders */}
+                <rect x="25" y="10" width="50" height="15" rx="1" fill="#FAF6EE" strokeWidth="1" />
+                <line x1="20" y1="18" x2="80" y2="18" strokeWidth="2.5" />
+                <circle cx="20" cy="18" r="3" fill="#171717" />
+                <circle cx="80" cy="18" r="3" fill="#171717" />
+                {/* Carriage body thud */}
+                <rect x="18" y="24" width="64" height="32" rx="3" fill="none" />
+                <rect x="28" y="28" width="44" height="20" rx="1.5" stroke="#171717" strokeDasharray="1 1" />
+                {/* Typing striker key blocks linkage arm */}
+                <path d="M50 48 L50 35 M45 48 L40 38 M55 48 L60 38" strokeWidth="1.2" strokeLinecap="round" />
+                <rect x="12" y="56" width="76" height="16" rx="2" fill="#FAF9F5" />
+                {/* Small manual keys matrix dots */}
+                <circle cx="22" cy="61" r="1.5" fill="#171717" /><circle cx="32" cy="61" r="1.5" fill="#171717" /><circle cx="42" cy="61" r="1.5" fill="#171717" />
+                <circle cx="52" cy="61" r="1.5" fill="#171717" /><circle cx="62" cy="61" r="1.5" fill="#171717" /><circle cx="72" cy="61" r="1.5" fill="#171717" />
+                <circle cx="27" cy="67" r="1.5" fill="#171717" /><circle cx="37" cy="67" r="1.5" fill="#171717" /><circle cx="47" cy="67" r="1.5" fill="#171717" />
+                <circle cx="57" cy="67" r="1.5" fill="#171717" /><circle cx="67" cy="67" r="1.5" fill="#171717" /><circle cx="77" cy="67" r="1.5" fill="#171717" />
+              </svg>
+              {/* Animated print indicator red light */}
+              <span className="absolute bottom-5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-red-600 animate-ping"></span>
+            </div>
+
+            <!-- Typed Text board scrolling within rolling slot -->
+            <div className="w-full max-w-[290px] min-h-[120px] bg-[#FAF7F0] sketch-border-sm border-neutral-800 p-4 text-left shadow-inner flex flex-col justify-end text-neutral-950 font-serif-en font-black text-[12px] tracking-wide leading-relaxed mt-2 whitespace-pre-wrap select-text">
+              <div className="text-stone-400 font-mono text-[8px] border-b border-stone-200/50 pb-1 mb-2">GERMAN TYPIST MODEL. 1928 ORIGINAL OUTPUT</div>
+              {printedLetters}
+              <span className="w-1.5 h-4 bg-stone-900 inline-block animate-pulse ml-0.5 align-middle"></span>
+            </div>
+
+          </div>
+
+          <!-- Action shortcut skips directly to sheet paper cards (PRD 3.2) -->
+          <div className="w-full text-center shrink-0 mb-2">
+            <button 
+              onClick={onFinish}
+              className="px-6 py-2 bg-white text-[11px] font-sketch font-bold tracking-widest text-[#171717] hover:bg-neutral-50 transition-colors sketch-border-sm cursor-pointer shadow-[2.5px_2.5px_0px_#171717] active:translate-y-0.5 active:shadow-[0px_0px_0px]"
+            >
+              直接抽纸取出 (SKIP PRINTER) →
+            </button>
+          </div>
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

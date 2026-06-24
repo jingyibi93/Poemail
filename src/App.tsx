@@ -4,7 +4,8 @@ import {
   Volume2, 
   VolumeX, 
   RotateCcw,
-  Sparkles
+  Sparkles,
+  Mailbox
 } from 'lucide-react';
 import { POEMS_DATA } from './data/poems';
 import { PoemLetter } from './types';
@@ -12,6 +13,7 @@ import MailboxWall from './components/MailboxWall';
 import TypewriterMachine from './components/TypewriterMachine';
 import PoemDisplayView from './components/PoemDisplayView';
 import CabinetView from './components/CabinetView';
+import { startPreloadingAudio } from './utils/audioPreloader';
 
 // POIGNANT CALENDAR DATE HELPER WITH MINIMAL DESIGN
 const getFormattedDailyDate = () => {
@@ -33,11 +35,10 @@ export default function App() {
   const formattedDate = getFormattedDailyDate();
   const chineseDate = getChineseDateSubtitle();
 
-  // Pick deterministic daily poem based on actual day of month
+  // Pick today's letter randomly from all poems
   const getDailyPoemLetter = (): PoemLetter => {
-    const today = new Date();
-    const index = (today.getDate() + today.getMonth() * 30) % POEMS_DATA.length;
-    return POEMS_DATA[index];
+    const randomIndex = Math.floor(Math.random() * POEMS_DATA.length);
+    return POEMS_DATA[randomIndex];
   };
 
   const dailyLetter = getDailyPoemLetter();
@@ -49,6 +50,7 @@ export default function App() {
   // 'cabinet' -> Retro chest/box display showing collected hand-wrapped poems
   const [currentPhase, setCurrentPhase] = useState<'mailbox' | 'typewriter' | 'display' | 'cabinet'>('mailbox');
   const [currentLetter, setCurrentLetter] = useState<PoemLetter>(dailyLetter);
+  const [activeCategory, setActiveCategory] = useState<'all' | 'soft_landing' | 'quiet_room' | 'rain_note' | 'little_glow' | 'far_away'>('all');
   const [navigationSource, setNavigationSource] = useState<'mailbox' | 'cabinet'>('mailbox');
 
   const [collectedLetters, setCollectedLetters] = useState<PoemLetter[]>(() => {
@@ -69,35 +71,116 @@ export default function App() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [typewriterResetId, setTypewriterResetId] = useState(0);
+  const [isTuckingActive, setIsTuckingActive] = useState(false);
 
   // Web Speech synthesis whisper reader (untainted and client-safe)
   const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
 
   useEffect(() => {
+    // Background preload the typewriter key sounds immediately on load
+    startPreloadingAudio().catch(() => {});
+
+    const handleInteraction = () => {
+      try {
+        const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioCtxClass) {
+          if (!(window as any).__globalAudioCtx) {
+            (window as any).__globalAudioCtx = new AudioCtxClass();
+          }
+          const ctx = (window as any).__globalAudioCtx;
+          if (ctx && ctx.state === 'suspended') {
+            ctx.resume().catch(() => {});
+          }
+        }
+        // Also ensure start preloading is triggered under interaction just in case
+        startPreloadingAudio().catch(() => {});
+      } catch (e) {
+        console.warn('Unlock audio context error:', e);
+      }
+
+      // Pre-initialize standard audio to unlock HTML5 playback restrictions
+      try {
+        const silentAudio = new Audio();
+        silentAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+        silentAudio.play().catch(() => {});
+      } catch (e) {}
+
+      // Clean up after first interaction
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+      window.removeEventListener('keydown', handleInteraction);
+    };
+
+    window.addEventListener('click', handleInteraction);
+    window.addEventListener('touchstart', handleInteraction);
+    window.addEventListener('keydown', handleInteraction);
+
     return () => {
       if (synth && synth.speaking) {
         synth.cancel();
       }
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+      window.removeEventListener('keydown', handleInteraction);
     };
   }, []);
 
   const triggerToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 2500);
+    // Toast notifications completely removed to eliminate black prompt bubbles as requested
   };
 
   // Main interaction trigger: Pull from physical grid slot 11
-  const handlePullOut = () => {
+  const handlePullOut = (mood?: string) => {
+    // Direct user-gesture: Instantiate and resume the AudioContext right in the click stack!
+    try {
+      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtxClass) {
+        if (!(window as any).__globalAudioCtx) {
+          (window as any).__globalAudioCtx = new AudioCtxClass();
+        }
+        const ctx = (window as any).__globalAudioCtx;
+        if (ctx && ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+      }
+    } catch (e) {
+      console.warn('AudioContext trigger on click error:', e);
+    }
+
     if (synth && synth.speaking) {
       synth.cancel();
       setIsSpeaking(false);
     }
     
-    // Choose a completely random poem from POEMS_DATA each time
-    const randomIndex = Math.floor(Math.random() * POEMS_DATA.length);
-    const chosenPoem = POEMS_DATA[randomIndex];
+    // Choose a poem based on category/mood if specified, else totally random
+    let filteredPoems = POEMS_DATA;
+    if (mood && mood !== 'today') {
+      if (mood === 'tired') {
+        filteredPoems = POEMS_DATA.filter(p => p.category === 'soft_landing');
+        setActiveCategory('soft_landing');
+      } else if (mood === 'quiet') {
+        filteredPoems = POEMS_DATA.filter(p => p.category === 'quiet_room');
+        setActiveCategory('quiet_room');
+      } else if (mood === 'rainy') {
+        filteredPoems = POEMS_DATA.filter(p => p.category === 'rain_note');
+        setActiveCategory('rain_note');
+      } else if (mood === 'escape') {
+        filteredPoems = POEMS_DATA.filter(p => p.category === 'far_away');
+        setActiveCategory('far_away');
+      } else if (mood === 'happy') {
+        filteredPoems = POEMS_DATA.filter(p => p.category === 'little_glow');
+        setActiveCategory('little_glow');
+      }
+    } else {
+      setActiveCategory('all');
+    }
+    
+    if (filteredPoems.length === 0) {
+      filteredPoems = POEMS_DATA;
+    }
+
+    const randomIndex = Math.floor(Math.random() * filteredPoems.length);
+    const chosenPoem = filteredPoems[randomIndex];
     setCurrentLetter(chosenPoem);
     setNavigationSource('mailbox');
 
@@ -107,6 +190,28 @@ export default function App() {
     triggerToast('正在抽出信纸，卷入打字机辊轴...');
   };
 
+  const handlePassAndRegenerate = () => {
+    if (synth && synth.speaking) {
+      synth.cancel();
+      setIsSpeaking(false);
+    }
+    
+    // Select candidates from the same category or all poems
+    let candidates = POEMS_DATA;
+    if (activeCategory !== 'all') {
+      candidates = POEMS_DATA.filter(p => p.category === activeCategory);
+    }
+    
+    const filtered = candidates.filter(p => p.id !== currentLetter.id);
+    const pool = filtered.length > 0 ? filtered : candidates;
+    const randomIndex = Math.floor(Math.random() * pool.length);
+    const chosenPoem = pool[randomIndex];
+    setCurrentLetter(chosenPoem);
+    setNavigationSource('mailbox');
+    setCurrentPhase('typewriter');
+    setTypewriterResetId(p => p + 1);
+  };
+
   const handleToggleCollection = (letter: PoemLetter) => {
     let next: PoemLetter[] = [];
     const exists = collectedLetters.some(item => item.id === letter.id);
@@ -114,28 +219,21 @@ export default function App() {
       next = collectedLetters.filter(item => item.id !== letter.id);
       triggerToast('已将信纸从收藏盒取回 💌');
     } else {
-      next = [...collectedLetters, letter];
+      next = [letter, ...collectedLetters]; // Prepend so they display from top to bottom (newest to oldest)
       triggerToast('✨ 信笺已妥帖加入收藏盒啦！');
     }
     setCollectedLetters(next);
     localStorage.setItem('poetry_mailbox_collections', JSON.stringify(next));
   };
 
-  // Play whisper voice slowly
-  const handleWhisperSpeech = () => {
-    if (!synth) {
-      triggerToast('暂不支持语音朗读功能');
-      return;
-    }
+  const startWhisperSpeech = (letter: PoemLetter) => {
+    if (!synth) return;
 
     if (synth.speaking) {
       synth.cancel();
-      setIsSpeaking(false);
-      triggerToast('朗读断开');
-      return;
     }
 
-    const cleanString = currentLetter.poem.replace(/\n/g, ', ');
+    const cleanString = letter.poem.replace(/\n/g, ', ');
     const utterance = new SpeechSynthesisUtterance(cleanString);
     utterance.lang = 'en-US';
     utterance.rate = 0.72; // slow pacing
@@ -167,6 +265,40 @@ export default function App() {
     synth.speak(utterance);
   };
 
+  // Play whisper voice slowly
+  const handleWhisperSpeech = () => {
+    if (!synth) {
+      triggerToast('暂不支持语音朗读功能');
+      return;
+    }
+
+    if (synth.speaking) {
+      synth.cancel();
+      setIsSpeaking(false);
+      triggerToast('朗读断开');
+      return;
+    }
+
+    startWhisperSpeech(currentLetter);
+  };
+
+  // Auto-read on entering the letter detail page
+  useEffect(() => {
+    if (currentPhase === 'display') {
+      const timer = setTimeout(() => {
+        startWhisperSpeech(currentLetter);
+      }, 550); // Delay slightly for smooth entering page transitions
+      return () => {
+        clearTimeout(timer);
+      };
+    } else {
+      if (synth && synth.speaking) {
+        synth.cancel();
+        setIsSpeaking(false);
+      }
+    }
+  }, [currentPhase, currentLetter.id]);
+
   // Return back to unread base
   const handleBackToMailbox = () => {
     if (synth && synth.speaking) {
@@ -185,7 +317,7 @@ export default function App() {
     if (navigationSource === 'cabinet') {
       setCurrentPhase('cabinet');
     } else {
-      setCurrentPhase('mailbox');
+      setCurrentPhase('typewriter');
     }
   };
 
@@ -194,7 +326,7 @@ export default function App() {
       
       {/* Handheld Device Container with handwritten look */}
       <div 
-        className="w-full h-full sm:w-[410px] sm:h-[840px] sm:rounded-[36px] bg-white border-2 sm:border-8 border-neutral-900 shadow-[8px_8px_0px_#171717] relative flex flex-col justify-between overflow-hidden"
+        className="w-full h-full sm:w-[410px] sm:h-[840px] sm:rounded-[36px] bg-white border-2 sm:border-8 border-neutral-900 relative flex flex-col justify-between overflow-hidden"
         id="phone-stage"
       >
         
@@ -211,41 +343,41 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Elegant Keepsake Cabinet Chest button (Only accessible from internal sub-screens, never from Home screen as requested) */}
-            {currentPhase !== 'mailbox' && currentPhase !== 'cabinet' && (
+            {/* Elegant Return-to-Mailbox Home button (Only shown when not on the main mailbox/home screen) */}
+            {currentPhase !== 'mailbox' && (
+              <button 
+                onClick={handleBackToMailbox}
+                className="w-8 h-8 bg-white hover:bg-[#FAF9F5] flex items-center justify-center text-neutral-900 transition-all cursor-pointer shadow-[2px_2px_0px_#171717] active:translate-y-0.5 active:shadow-[0px_0px_0px] sketch-border-sm relative"
+                title="回到邮箱主页"
+                id="header-mailbox-btn"
+              >
+                <Mailbox size={18} strokeWidth={1.8} className="text-neutral-900" />
+              </button>
+            )}
+
+            {/* Collection Box button for preceding pages (Starting from home, typewriter, and display-from-mailbox) */}
+            {(currentPhase === 'mailbox' || currentPhase === 'typewriter' || (currentPhase === 'display' && navigationSource === 'mailbox')) && (
               <button 
                 onClick={() => {
+                  if (synth && synth.speaking) {
+                    synth.cancel();
+                    setIsSpeaking(false);
+                  }
                   setCurrentPhase('cabinet');
-                  triggerToast('打开收藏盒 ✿');
                 }}
                 className="w-8 h-8 bg-white hover:bg-[#FAF9F5] flex items-center justify-center text-neutral-900 transition-all cursor-pointer shadow-[2px_2px_0px_#171717] active:translate-y-0.5 active:shadow-[0px_0px_0px] sketch-border-sm relative"
                 title="打开收藏盒"
                 id="header-cabinet-btn"
               >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-900">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-900">
                   <rect width="20" height="9" x="2" y="3" rx="1" />
                   <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
                   <path d="M9 16h6" />
                 </svg>
-                {collectedLetters.length > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-[#DE6B6B] text-white text-[7.5px] font-bold px-1 rounded-full leading-none h-3.5 min-w-3.5 flex items-center justify-center border border-white scale-90 shadow-md">
-                    {collectedLetters.length}
-                  </span>
-                )}
               </button>
             )}
 
-            {/* Home/Reset button */}
-            {currentPhase !== 'mailbox' && (
-              <button 
-                onClick={handleBackToMailbox}
-                className="w-8 h-8 bg-white hover:bg-neutral-50 flex items-center justify-center text-neutral-900 transition-all cursor-pointer shadow-[2px_2px_0px_#171717] active:translate-y-0.5 active:shadow-[0px_0px_0px] sketch-border-sm"
-                title="返回信箱"
-                id="reset-to-daily-btn"
-              >
-                <RotateCcw size={11} className="stroke-[1.3]" />
-              </button>
-            )}
+            {/* Home/Reset button completely removed as requested */}
           </div>
         </header>
 
@@ -263,7 +395,7 @@ export default function App() {
           </div>
 
           {/* Dynamic workspace animations with Framer AnimatePresence */}
-          <div className="flex-1 w-full flex flex-col justify-center min-h-[460px] relative">
+          <div className="flex-1 w-full flex flex-col min-h-[460px] relative">
             <AnimatePresence mode="wait">
               
               {/* PHASE 1: MAILBOX GRID STRUCTURE (Image 1) */}
@@ -315,7 +447,7 @@ export default function App() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="w-full h-full"
+                  className="w-full flex-1 flex flex-col"
                 >
                   <PoemDisplayView
                     currentLetter={currentLetter}
@@ -327,6 +459,9 @@ export default function App() {
                     onViewCabinet={() => {
                       setCurrentPhase('cabinet');
                     }}
+                    collectedLetters={collectedLetters}
+                    onTuckingActiveChange={setIsTuckingActive}
+                    onPass={handlePassAndRegenerate}
                   />
                 </motion.div>
               )}
@@ -350,7 +485,13 @@ export default function App() {
                     onRemoveLetter={(letter) => {
                       handleToggleCollection(letter);
                     }}
-                    onBack={handleBackToMailbox}
+                    onBack={() => {
+                      if (synth && synth.speaking) {
+                        synth.cancel();
+                        setIsSpeaking(false);
+                      }
+                      setCurrentPhase('display');
+                    }}
                   />
                 </motion.div>
               )}
@@ -359,21 +500,6 @@ export default function App() {
           </div>
 
         </main>
-
-        {/* --- Custom Toast Alert messages banner --- */}
-        <AnimatePresence>
-          {toastMessage && (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="absolute bottom-32 left-1/2 -translate-x-1/2 bg-neutral-900 text-white text-[11px] font-sketch font-bold px-4 py-2 z-[100] shadow-[3px_3px_0px_#8FA189] pointer-events-none tracking-widest text-center max-w-[280px] sketch-border-sm"
-              id="app-toast-alert"
-            >
-              {toastMessage}
-            </motion.div>
-          )}
-        </AnimatePresence>
 
       </div>
     </div>
