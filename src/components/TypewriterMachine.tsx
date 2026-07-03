@@ -449,6 +449,38 @@ export default function TypewriterMachine({
     } catch (e) {}
   };
 
+  // Dynamic font sizing for long poems to avoid paper overflow
+  const getFontSizeStyle = () => {
+    const lines = poemText.split('\n');
+    const lineCount = lines.length;
+    const maxLineLength = Math.max(...lines.map(l => l.length), 0);
+    const totalLen = poemText.length;
+
+    if (lineCount > 6 || totalLen > 150 || maxLineLength > 32) {
+      return {
+        fontSizeClass: 'text-[11px] sm:text-[12px]',
+        leadingClass: 'leading-[1.35]',
+        trackingClass: 'tracking-normal',
+        pyClass: 'py-0.5'
+      };
+    } else if (lineCount > 4 || totalLen > 100 || maxLineLength > 24) {
+      return {
+        fontSizeClass: 'text-[12.5px] sm:text-[13.5px]',
+        leadingClass: 'leading-[1.45]',
+        trackingClass: 'tracking-wide',
+        pyClass: 'py-1'
+      };
+    }
+    return {
+      fontSizeClass: 'text-sm sm:text-base',
+      leadingClass: 'leading-relaxed',
+      trackingClass: 'tracking-wider',
+      pyClass: 'py-2'
+    };
+  };
+
+  const fontStyle = getFontSizeStyle();
+
   return (
     <div 
       onClick={handleTouchTypewriter}
@@ -468,7 +500,7 @@ export default function TypewriterMachine({
             height: 180 + Math.min(100, Math.floor(currentIndex / 6) * 4)
           }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
-          className="w-[90%] pt-11 px-5 pb-8 flex flex-col justify-start relative z-10 text-left overflow-y-auto no-scrollbar"
+          className="w-[90%] pt-9 px-4 pb-4.5 flex flex-col justify-start relative z-10 text-left overflow-hidden"
         >
           {/* Handdrawn vector background matching the user's exact hand-drawn blue outline (sagging top) */}
           <div className="absolute inset-0 pointer-events-none overflow-visible z-[-1]">
@@ -501,9 +533,9 @@ export default function TypewriterMachine({
             <span className="font-sketch italic text-[9.5px] text-neutral-400 font-bold">omont.2026</span>
           </div>
 
-          {/* Typewritten text field */}
-          <div className="flex-1 font-mono text-neutral-950 font-bold select-text leading-relaxed text-center flex flex-col justify-center py-2 relative z-10">
-            <span className="whitespace-pre-line text-sm sm:text-base tracking-wider pointer-events-auto">
+          {/* Typewritten text field with dynamic font styles */}
+          <div className={`flex-1 font-mono text-neutral-950 font-bold select-text text-center flex flex-col justify-center relative z-10 ${fontStyle.leadingClass} ${fontStyle.pyClass}`}>
+            <span className={`whitespace-pre-line pointer-events-auto ${fontStyle.fontSizeClass} ${fontStyle.trackingClass}`}>
               {displayedText}
               {!isDone && (
                 <span className="inline-block w-1.5 h-4 bg-neutral-950 ml-0.5 animate-pulse" />
