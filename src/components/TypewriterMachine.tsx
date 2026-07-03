@@ -449,37 +449,24 @@ export default function TypewriterMachine({
     } catch (e) {}
   };
 
-  // Dynamic font sizing for long poems to avoid paper overflow
-  const getFontSizeStyle = () => {
-    const lines = poemText.split('\n');
-    const lineCount = lines.length;
-    const maxLineLength = Math.max(...lines.map(l => l.length), 0);
-    const totalLen = poemText.length;
-
-    if (lineCount > 6 || totalLen > 150 || maxLineLength > 32) {
-      return {
-        fontSizeClass: 'text-[11px] sm:text-[12px]',
-        leadingClass: 'leading-[1.35]',
-        trackingClass: 'tracking-normal',
-        pyClass: 'py-0.5'
-      };
-    } else if (lineCount > 4 || totalLen > 100 || maxLineLength > 24) {
-      return {
-        fontSizeClass: 'text-[12.5px] sm:text-[13.5px]',
-        leadingClass: 'leading-[1.45]',
-        trackingClass: 'tracking-wide',
-        pyClass: 'py-1'
-      };
+  // Estimate actual printed lines, taking screen wrapping into account so that long poems do not overflow
+  const getApproximateLinesCount = () => {
+    const rawLines = displayedText.split('\n');
+    let totalLines = 0;
+    for (const line of rawLines) {
+      if (line.length === 0) {
+        totalLines += 1;
+      } else {
+        // Average characters that fit inside the narrow paper (width ~240px after padding)
+        // With standard monospace font size sm:text-base (14px-16px), it wraps around 21 characters
+        totalLines += Math.max(1, Math.ceil(line.length / 21));
+      }
     }
-    return {
-      fontSizeClass: 'text-sm sm:text-base',
-      leadingClass: 'leading-relaxed',
-      trackingClass: 'tracking-wider',
-      pyClass: 'py-2'
-    };
+    return Math.max(1, totalLines);
   };
 
-  const fontStyle = getFontSizeStyle();
+  const approxLines = getApproximateLinesCount();
+  const additionalLines = approxLines - 1;
 
   return (
     <div 
@@ -495,9 +482,9 @@ export default function TypewriterMachine({
         {/* The sheet of white paper emerging */}
         <motion.div
           animate={{
-            // Paper scrolls upwards as more typing flows in
-            y: Math.max(0, -Math.floor(currentIndex / 12) * 5),
-            height: 180 + Math.min(100, Math.floor(currentIndex / 6) * 4)
+            // Keep the paper bottom tucked 6px behind the Instruction bar/typewriter slot, never leaving it
+            y: 6,
+            height: 180 + Math.min(180, additionalLines * 26)
           }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
           className="w-[90%] pt-9 px-4 pb-4.5 flex flex-col justify-start relative z-10 text-left overflow-hidden"
@@ -533,9 +520,9 @@ export default function TypewriterMachine({
             <span className="font-sketch italic text-[9.5px] text-neutral-400 font-bold">omont.2026</span>
           </div>
 
-          {/* Typewritten text field with dynamic font styles */}
-          <div className={`flex-1 font-mono text-neutral-950 font-bold select-text text-center flex flex-col justify-center relative z-10 ${fontStyle.leadingClass} ${fontStyle.pyClass}`}>
-            <span className={`whitespace-pre-line pointer-events-auto ${fontStyle.fontSizeClass} ${fontStyle.trackingClass}`}>
+          {/* Typewritten text field with fixed font styles */}
+          <div className="flex-1 font-mono text-neutral-950 font-bold select-text text-center flex flex-col justify-center relative z-10 leading-relaxed py-2">
+            <span className="whitespace-pre-line pointer-events-auto text-sm sm:text-base tracking-wider">
               {displayedText}
               {!isDone && (
                 <span className="inline-block w-1.5 h-4 bg-neutral-950 ml-0.5 animate-pulse" />

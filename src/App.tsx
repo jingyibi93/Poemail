@@ -35,23 +35,12 @@ export default function App() {
   const formattedDate = getFormattedDailyDate();
   const chineseDate = getChineseDateSubtitle();
 
-  // Pick today's letter randomly from all poems
-  const getDailyPoemLetter = (): PoemLetter => {
-    const randomIndex = Math.floor(Math.random() * POEMS_DATA.length);
-    return POEMS_DATA[randomIndex];
-  };
-
-  const dailyLetter = getDailyPoemLetter();
-
   // EXPERIENTIAL PHASE STATES
   // 'mailbox' -> Grid close up wall slots list (Reference Image 1)
   // 'typewriter' -> Mechanical blue typist rolling printing detail page (Reference Image 2)
   // 'display' -> Paper card with centering text & Action controls (Reference Image 3, 4, 100% natural hand-sketched)
   // 'cabinet' -> Retro chest/box display showing collected hand-wrapped poems
   const [currentPhase, setCurrentPhase] = useState<'mailbox' | 'typewriter' | 'display' | 'cabinet'>('mailbox');
-  const [currentLetter, setCurrentLetter] = useState<PoemLetter>(dailyLetter);
-  const [activeCategory, setActiveCategory] = useState<'all' | 'soft_landing' | 'quiet_room' | 'rain_note' | 'little_glow' | 'far_away'>('all');
-  const [navigationSource, setNavigationSource] = useState<'mailbox' | 'cabinet'>('mailbox');
 
   const [collectedLetters, setCollectedLetters] = useState<PoemLetter[]>(() => {
     if (typeof window !== 'undefined') {
@@ -66,6 +55,32 @@ export default function App() {
     }
     return [];
   });
+
+  const [currentLetter, setCurrentLetter] = useState<PoemLetter>(() => {
+    let savedCollected: PoemLetter[] = [];
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('poetry_mailbox_collections');
+      if (saved) {
+        try {
+          savedCollected = JSON.parse(saved);
+        } catch (e) {
+          savedCollected = [];
+        }
+      }
+    }
+    const collectedIds = new Set(savedCollected.map(item => item.id));
+    const available = POEMS_DATA.filter(p => !collectedIds.has(p.id));
+    if (available.length > 0) {
+      const randomIndex = Math.floor(Math.random() * available.length);
+      return available[randomIndex];
+    }
+    // Fallback if all are collected
+    const randomIndex = Math.floor(Math.random() * POEMS_DATA.length);
+    return POEMS_DATA[randomIndex];
+  });
+
+  const [activeCategory, setActiveCategory] = useState<'all' | 'soft_landing' | 'quiet_room' | 'rain_note' | 'little_glow' | 'far_away'>('all');
+  const [navigationSource, setNavigationSource] = useState<'mailbox' | 'cabinet'>('mailbox');
   
   // Interactive Helper States For Audio
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -179,8 +194,23 @@ export default function App() {
       filteredPoems = POEMS_DATA;
     }
 
-    const randomIndex = Math.floor(Math.random() * filteredPoems.length);
-    const chosenPoem = filteredPoems[randomIndex];
+    // Filter out already collected/favorited poems
+    const collectedIds = new Set(collectedLetters.map(item => item.id));
+    let availablePoems = filteredPoems.filter(p => !collectedIds.has(p.id));
+
+    // Fallbacks if all selected poems are collected
+    if (availablePoems.length === 0) {
+      // Try to find any uncollected poem across all categories
+      availablePoems = POEMS_DATA.filter(p => !collectedIds.has(p.id));
+      
+      // If absolutely everything has been collected, allow repeating from the current category
+      if (availablePoems.length === 0) {
+        availablePoems = filteredPoems;
+      }
+    }
+
+    const randomIndex = Math.floor(Math.random() * availablePoems.length);
+    const chosenPoem = availablePoems[randomIndex];
     setCurrentLetter(chosenPoem);
     setNavigationSource('mailbox');
 
@@ -202,10 +232,26 @@ export default function App() {
       candidates = POEMS_DATA.filter(p => p.category === activeCategory);
     }
     
-    const filtered = candidates.filter(p => p.id !== currentLetter.id);
-    const pool = filtered.length > 0 ? filtered : candidates;
-    const randomIndex = Math.floor(Math.random() * pool.length);
-    const chosenPoem = pool[randomIndex];
+    // Filter out already collected/favorited poems, as well as the current poem
+    const collectedIds = new Set(collectedLetters.map(item => item.id));
+    let available = candidates.filter(p => !collectedIds.has(p.id) && p.id !== currentLetter.id);
+
+    // Fallbacks if candidates are empty (e.g. all in category are collected)
+    if (available.length === 0) {
+      // Try to find any uncollected poem across all categories (excluding current letter)
+      available = POEMS_DATA.filter(p => !collectedIds.has(p.id) && p.id !== currentLetter.id);
+      
+      // If absolutely all are collected, fallback to excluding only the current letter in candidates
+      if (available.length === 0) {
+        available = candidates.filter(p => p.id !== currentLetter.id);
+        if (available.length === 0) {
+          available = candidates;
+        }
+      }
+    }
+    
+    const randomIndex = Math.floor(Math.random() * available.length);
+    const chosenPoem = available[randomIndex];
     setCurrentLetter(chosenPoem);
     setNavigationSource('mailbox');
     setCurrentPhase('typewriter');
