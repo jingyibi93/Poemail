@@ -368,18 +368,18 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-100 flex items-center justify-center p-0 sm:p-4 md:p-6 font-sans-ui overflow-hidden select-none">
+    <div className="min-h-[100svh] bg-neutral-100 flex items-start sm:items-center justify-center p-0 sm:p-4 md:p-6 font-sans-ui overflow-y-auto sm:overflow-hidden select-none">
       
       {/* Handheld Device Container with handwritten look */}
       <div 
-        className="w-full h-full sm:w-[410px] sm:h-[840px] sm:rounded-[36px] bg-white border-2 sm:border-8 border-neutral-900 relative flex flex-col justify-between overflow-hidden"
+        className="phone-stage-frame sm:rounded-[36px] bg-white border-2 sm:border-8 border-neutral-900 relative flex flex-col justify-between overflow-hidden"
         id="phone-stage"
       >
         
         {/* --- Top App Header (Clean black outlines, pure white canvas) --- */}
         <header className="px-5 pt-5 pb-4 flex items-center justify-between z-30 shrink-0 border-b-2 border-neutral-900 bg-white">
           <div className="flex flex-col text-left">
-            <span className="font-serif-en italic font-bold text-sm tracking-wide text-neutral-950 flex items-center gap-1.5 font-sans">
+            <span className="font-serif-en italic font-bold text-sm tracking-wide text-neutral-950 flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-neutral-950 animate-pulse" />
               Poetry Mailbox
             </span>
@@ -428,20 +428,20 @@ export default function App() {
         </header>
 
         {/* --- Central Main Screen Workspace --- */}
-        <main className="flex-grow px-5 py-4 flex flex-col justify-between gap-3 overflow-y-auto no-scrollbar z-10 bg-white relative">
+        <main className="flex-1 min-h-0 px-5 py-4 flex flex-col justify-between gap-3 overflow-y-auto no-scrollbar z-10 bg-white relative">
           
           {/* Poignant Day/Date Watermark (Style Image 3 Top Center style) */}
           <div className="w-full text-center shrink-0 mt-1.5 select-none">
-            <p className="text-base font-sketch tracking-wide font-extrabold text-neutral-950 uppercase">
+            <p className="text-base font-serif-en tracking-wide font-extrabold text-neutral-950 uppercase">
               {formattedDate}
             </p>
-            <p className="text-[11px] text-neutral-500 font-sketch font-bold tracking-widest mt-0.5 uppercase">
+            <p className="text-[11px] text-neutral-500 font-serif-zh font-bold tracking-widest mt-0.5 uppercase">
               • {chineseDate} •
             </p>
           </div>
 
           {/* Dynamic workspace animations with Framer AnimatePresence */}
-          <div className="flex-1 w-full flex flex-col min-h-[460px] relative">
+          <div className="flex-1 w-full flex flex-col min-h-0 relative">
             <AnimatePresence mode="wait">
               
               {/* PHASE 1: MAILBOX GRID STRUCTURE (Image 1) */}

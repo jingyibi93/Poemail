@@ -516,8 +516,8 @@ export default function TypewriterMachine({
 
           {/* Paper lines watermark or header decoration - Moved fully down, using cute handwritten feel */}
           <div className="border-b border-dashed border-neutral-300 pb-1.5 flex justify-between items-center text-neutral-400 select-none sm:mb-4 relative z-10 mt-3.5">
-            <span className="font-sketch text-[9.5px] tracking-wider text-neutral-400 font-bold">typewriter no. 11</span>
-            <span className="font-sketch italic text-[9.5px] text-neutral-400 font-bold">omont.2026</span>
+            <span className="font-serif-en text-[9.5px] tracking-wider text-neutral-400 font-bold">typewriter no. 11</span>
+            <span className="font-serif-en italic text-[9.5px] text-neutral-400 font-bold">omont.2026</span>
           </div>
 
           {/* Typewritten text field with fixed font styles */}
@@ -542,14 +542,14 @@ export default function TypewriterMachine({
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neutral-900 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-neutral-950"></span>
           </span>
-          <span className="text-[10px] font-sketch font-bold tracking-wider text-neutral-900 uppercase">
+          <span className="text-[9px] sm:text-[10px] font-serif-en font-bold tracking-wider text-neutral-900 uppercase whitespace-nowrap">
             🔊 MECHANICAL TYPEWRITER AUDIO
           </span>
         </div>
 
         <button
           onClick={handleSkipTyping}
-          className="text-[9.5px] font-sketch font-extrabold text-neutral-950 hover:underline cursor-pointer tracking-widest uppercase flex items-center gap-1 sketch-border-sm px-2.5 py-0.5 bg-white shadow-xs"
+          className="text-[9.5px] font-serif-en font-extrabold text-neutral-950 hover:underline cursor-pointer tracking-widest uppercase flex items-center gap-1 sketch-border-sm px-2.5 py-0.5 bg-white shadow-xs"
         >
           ⚡ SKIP
         </button>
@@ -596,7 +596,7 @@ export default function TypewriterMachine({
             
             {/* Steel Segment Carrier ribbon cover panel (the silver triangular wedge) */}
             <div className="w-24 h-5 sketch-border-sm bg-white rounded-t-none mx-auto flex items-center justify-center -mt-3.5 z-20">
-              <span className="font-sketch text-[9px] text-neutral-800 font-black tracking-widest">OMONT</span>
+              <span className="font-serif-en text-[9px] text-neutral-800 font-black tracking-widest">OMONT</span>
             </div>
 
             {/* Simulated Keyboard Key Rows (Full configuration matching Smith-Corona layout) */}
@@ -660,14 +660,14 @@ export default function TypewriterMachine({
               {/* Row 5 space and return bar keycaps (Wider Spacebar like the real Smith-Corona) */}
               <div className="flex justify-center items-center gap-2 mt-0.5">
                 <div
-                  className={`w-32 h-4.5 sketch-border-sm flex items-center justify-center font-sketch text-[9px] font-extrabold tracking-widest translate-y-0.5 shadow-[1px_1.5px_0px_#171717] transition-all bg-[#fafaf7] text-neutral-800 ${
+                  className={`w-32 h-4.5 sketch-border-sm flex items-center justify-center font-serif-en text-[9px] font-extrabold tracking-widest translate-y-0.5 shadow-[1px_1.5px_0px_#171717] transition-all bg-[#fafaf7] text-neutral-800 ${
                     activeKey === 'SPACE' ? '!bg-neutral-950 !text-white translate-y-1 shadow-none' : ''
                   }`}
                 >
                   SPACE
                 </div>
                 <div
-                  className={`w-12 h-4.5 sketch-border-sm flex items-center justify-center font-sketch text-[9px] font-extrabold tracking-wider translate-y-0.5 shadow-[1px_1.5px_0px_#171717] transition-all bg-[#fafaf7] text-neutral-800 ${
+                  className={`w-12 h-4.5 sketch-border-sm flex items-center justify-center font-serif-en text-[9px] font-extrabold tracking-wider translate-y-0.5 shadow-[1px_1.5px_0px_#171717] transition-all bg-[#fafaf7] text-neutral-800 ${
                     activeKey === 'RET' ? '!bg-neutral-950 !text-white translate-y-1 shadow-none' : ''
                   }`}
                 >
