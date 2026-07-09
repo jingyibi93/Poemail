@@ -5,6 +5,7 @@ import { PoemLetter } from '../types';
 import HanddrawnCard from './HanddrawnCard';
 import KeepsakeBox from './KeepsakeBox';
 import { playEnvelopeInSound, playKeepsakeBoxSound, playPaperFoldSound } from '../utils/soundEffects';
+import { unlockMobileAudio } from '../utils/mobileAudio';
 
 interface PoemDisplayViewProps {
   currentLetter: PoemLetter;
@@ -47,6 +48,8 @@ export default function PoemDisplayView({
   }, [isAnimatingTuck, onTuckingActiveChange]);
 
   const handleCollectToggle = () => {
+    unlockMobileAudio();
+
     if (isSavedInBox) {
       // Removing item doesn't require complex animation
       if (onSave) onSave();

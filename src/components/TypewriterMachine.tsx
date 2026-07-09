@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Volume2 } from 'lucide-react';
 import { startPreloadingAudio, findWavefrontOffset } from '../utils/audioPreloader';
+import { getSharedAudioContext, unlockMobileAudio } from '../utils/mobileAudio';
 
 interface TypewriterMachineProps {
   poemText: string;
@@ -105,11 +106,7 @@ export default function TypewriterMachine({
 
     const initAudio = async () => {
       try {
-        const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
-        if (AudioCtxClass && !(window as any).__globalAudioCtx) {
-          (window as any).__globalAudioCtx = new AudioCtxClass();
-        }
-        audioCtxRef.current = (window as any).__globalAudioCtx;
+        audioCtxRef.current = getSharedAudioContext();
 
         // Instantly get or initiate async preloader on mount
         const buffers = await startPreloadingAudio();
@@ -149,7 +146,7 @@ export default function TypewriterMachine({
   // Physically modeled high-fidelity mechanical typewriter click/clack synthesis fallback
   const playProceduralSound = (isSpaceOrReturn: boolean) => {
     try {
-      const ctx = (window as any).__globalAudioCtx || audioCtxRef.current;
+      const ctx = getSharedAudioContext() || audioCtxRef.current;
       if (!ctx) return;
       
       const now = ctx.currentTime;
@@ -215,7 +212,7 @@ export default function TypewriterMachine({
 
   const playTypewriterSound = (char: string) => {
     try {
-      const ctx = (window as any).__globalAudioCtx || audioCtxRef.current;
+      const ctx = getSharedAudioContext() || audioCtxRef.current;
       if (ctx && ctx.state === 'suspended') {
         ctx.resume().catch(() => {});
       }
@@ -277,7 +274,7 @@ export default function TypewriterMachine({
 
   const playDingSound = () => {
     try {
-      const ctx = (window as any).__globalAudioCtx || audioCtxRef.current;
+      const ctx = getSharedAudioContext() || audioCtxRef.current;
       if (ctx && ctx.state === 'suspended') {
         ctx.resume().catch(() => {});
       }
@@ -291,7 +288,7 @@ export default function TypewriterMachine({
         source.connect(gainNode);
         gainNode.connect(ctx.destination);
 
-        source.start(0);
+        source.start(ctx.currentTime);
       } else {
         // High-fidelity physical modeling of an antique brass copper bell "DINGGG!" fallback
         if (ctx) {
@@ -401,6 +398,7 @@ export default function TypewriterMachine({
 
   // Handle instant tap-to-skip typing
   const handleSkipTyping = () => {
+    unlockMobileAudio();
     if (isDone) return;
     setIsDone(true);
     setDisplayedText(poemText);
@@ -442,10 +440,7 @@ export default function TypewriterMachine({
 
   const handleTouchTypewriter = () => {
     try {
-      const ctx = (window as any).__globalAudioCtx || audioCtxRef.current;
-      if (ctx && ctx.state === 'suspended') {
-        ctx.resume().catch(() => {});
-      }
+      unlockMobileAudio();
     } catch (e) {}
   };
 
@@ -470,6 +465,8 @@ export default function TypewriterMachine({
 
   return (
     <div 
+      onPointerDown={handleTouchTypewriter}
+      onTouchStart={handleTouchTypewriter}
       onClick={handleTouchTypewriter}
       className="w-full flex-1 flex flex-col justify-between items-center bg-white relative overflow-hidden select-none"
     >

@@ -14,6 +14,7 @@ import TypewriterMachine from './components/TypewriterMachine';
 import PoemDisplayView from './components/PoemDisplayView';
 import CabinetView from './components/CabinetView';
 import { startPreloadingAudio } from './utils/audioPreloader';
+import { unlockMobileAudio } from './utils/mobileAudio';
 
 // POIGNANT CALENDAR DATE HELPER WITH MINIMAL DESIGN
 const getFormattedDailyDate = () => {
@@ -97,16 +98,7 @@ export default function App() {
 
     const handleInteraction = () => {
       try {
-        const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
-        if (AudioCtxClass) {
-          if (!(window as any).__globalAudioCtx) {
-            (window as any).__globalAudioCtx = new AudioCtxClass();
-          }
-          const ctx = (window as any).__globalAudioCtx;
-          if (ctx && ctx.state === 'suspended') {
-            ctx.resume().catch(() => {});
-          }
-        }
+        unlockMobileAudio();
         // Also ensure start preloading is triggered under interaction just in case
         startPreloadingAudio().catch(() => {});
       } catch (e) {
@@ -120,22 +112,21 @@ export default function App() {
         silentAudio.play().catch(() => {});
       } catch (e) {}
 
-      // Clean up after first interaction
-      window.removeEventListener('click', handleInteraction);
-      window.removeEventListener('touchstart', handleInteraction);
-      window.removeEventListener('keydown', handleInteraction);
+      // Keep this listener active. Mobile browsers can suspend audio after tab focus changes.
     };
 
-    window.addEventListener('click', handleInteraction);
-    window.addEventListener('touchstart', handleInteraction);
+    window.addEventListener('pointerdown', handleInteraction, { capture: true });
+    window.addEventListener('touchstart', handleInteraction, { capture: true });
+    window.addEventListener('click', handleInteraction, { capture: true });
     window.addEventListener('keydown', handleInteraction);
 
     return () => {
       if (synth && synth.speaking) {
         synth.cancel();
       }
-      window.removeEventListener('click', handleInteraction);
-      window.removeEventListener('touchstart', handleInteraction);
+      window.removeEventListener('pointerdown', handleInteraction, { capture: true });
+      window.removeEventListener('touchstart', handleInteraction, { capture: true });
+      window.removeEventListener('click', handleInteraction, { capture: true });
       window.removeEventListener('keydown', handleInteraction);
     };
   }, []);
@@ -148,16 +139,7 @@ export default function App() {
   const handlePullOut = (mood?: string) => {
     // Direct user-gesture: Instantiate and resume the AudioContext right in the click stack!
     try {
-      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (AudioCtxClass) {
-        if (!(window as any).__globalAudioCtx) {
-          (window as any).__globalAudioCtx = new AudioCtxClass();
-        }
-        const ctx = (window as any).__globalAudioCtx;
-        if (ctx && ctx.state === 'suspended') {
-          ctx.resume().catch(() => {});
-        }
-      }
+      unlockMobileAudio();
     } catch (e) {
       console.warn('AudioContext trigger on click error:', e);
     }

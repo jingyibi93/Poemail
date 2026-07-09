@@ -1,3 +1,5 @@
+import { getSharedAudioContext } from './mobileAudio';
+
 /**
  * Procedural synthesizers for realistic physical sound effects in the poem collection app.
  * By using the Web Audio API to model physical wave parameters directly, we eliminate
@@ -6,14 +8,8 @@
 
 export function playPaperFoldSound() {
   try {
-    const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioCtxClass) return;
-    
-    let ctx = (window as any).__globalAudioCtx;
-    if (!ctx) {
-      ctx = new AudioCtxClass();
-      (window as any).__globalAudioCtx = ctx;
-    }
+    const ctx = getSharedAudioContext();
+    if (!ctx) return;
     
     if (ctx.state === 'suspended') {
       ctx.resume().catch(() => {});
@@ -96,14 +92,8 @@ export function playPaperFoldSound() {
 
 export function playEnvelopeInSound() {
   try {
-    const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioCtxClass) return;
-    
-    let ctx = (window as any).__globalAudioCtx;
-    if (!ctx) {
-      ctx = new AudioCtxClass();
-      (window as any).__globalAudioCtx = ctx;
-    }
+    const ctx = getSharedAudioContext();
+    if (!ctx) return;
     
     if (ctx.state === 'suspended') {
       ctx.resume().catch(() => {});
@@ -191,14 +181,8 @@ export function playEnvelopeInSound() {
 
 export function playKeepsakeBoxSound() {
   try {
-    const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioCtxClass) return;
-    
-    let ctx = (window as any).__globalAudioCtx;
-    if (!ctx) {
-      ctx = new AudioCtxClass();
-      (window as any).__globalAudioCtx = ctx;
-    }
+    const ctx = getSharedAudioContext();
+    if (!ctx) return;
     
     if (ctx.state === 'suspended') {
       ctx.resume().catch(() => {});

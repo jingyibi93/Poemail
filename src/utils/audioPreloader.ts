@@ -1,6 +1,8 @@
 // Global Preloader for Typewriter Audio to eliminate start delay
 // Preloads and decodes antique typewriter sound effects using Web Audio API in the background.
 
+import { getSharedAudioContext } from './mobileAudio';
+
 export interface TypewriterAudioBuffers {
   key: AudioBuffer | null;
   space: AudioBuffer | null;
@@ -221,16 +223,10 @@ export const startPreloadingAudio = (): Promise<TypewriterAudioBuffers> => {
     
     isPreloading = true;
     try {
-      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtxClass) {
+      const ctx = getSharedAudioContext();
+      if (!ctx) {
         resolve(preloadedBuffers);
         return;
-      }
-      
-      let ctx = (window as any).__globalAudioCtx;
-      if (!ctx) {
-        ctx = new AudioCtxClass();
-        (window as any).__globalAudioCtx = ctx;
       }
  
       const loadAndDecode = async (relativePath: string): Promise<AudioBuffer | null> => {
