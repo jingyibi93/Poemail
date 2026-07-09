@@ -20,6 +20,7 @@ let preloadedBuffers: TypewriterAudioBuffers = {
 let isPreloading = false;
 let isLoaded = false;
 let loadPromise: Promise<TypewriterAudioBuffers> | null = null;
+const TYPEWRITER_MASTER_AUDIO = 'sounds/the-machine-prints-sound-by-sound.wav';
 
 // Get assets safely on absolute URL paths
 const getAssetUrl = (relativePath: string) => {
@@ -230,95 +231,73 @@ export const startPreloadingAudio = (): Promise<TypewriterAudioBuffers> => {
       }
  
       const loadAndDecode = async (relativePath: string): Promise<AudioBuffer | null> => {
-        const urlsToTry = [
-          getAssetUrl(relativePath),
-          `https://cdn.jsdelivr.net/gh/mushfiq/typewriter@master/public/${relativePath}`,
-          `https://raw.githubusercontent.com/mushfiq/typewriter/master/public/${relativePath}`
-        ];
+        const url = getAssetUrl(relativePath);
 
-        for (const url of urlsToTry) {
-          try {
-            console.log(`Typewriter preloader trying to fetch asset from: ${url}`);
-            const response = await fetch(url);
-            if (!response.ok) continue;
-            
-            const arrayBuffer = await response.arrayBuffer();
-            if (arrayBuffer.byteLength < 100) continue;
-            
-            // Verify that we didn't fetch a html 404 skeleton or text template
-            const uint8 = new Uint8Array(arrayBuffer);
-            let textSnippet = '';
-            for (let i = 0; i < Math.min(uint8.length, 100); i++) {
-              textSnippet += String.fromCharCode(uint8[i]);
-            }
-            if (
-              textSnippet.includes('<!DOCTYPE') || 
-              textSnippet.includes('<html') || 
-              textSnippet.includes('version https://git-lfs') ||
-              textSnippet.includes('<svg') ||
-              textSnippet.includes('{') || 
-              textSnippet.trim().startsWith('<')
-            ) {
-              console.warn(`Typewriter preloader skipped landing page or LFS text header: ${url}`);
-              continue;
-            }
-
-            const decoded = await new Promise<AudioBuffer | null>((res) => {
-              try {
-                const p = ctx.decodeAudioData(
-                  arrayBuffer,
-                  (decodedBuf) => res(decodedBuf),
-                  () => res(null)
-                );
-                if (p && typeof p.catch === 'function') {
-                  p.catch((err) => {
-                    console.warn(`Decode catch warning for ${url}: `, err);
-                    res(null);
-                  });
-                }
-              } catch (err) {
-                console.warn(`Decode try-catch warning for ${url}: `, err);
-                res(null);
-              }
-            });
-
-            if (decoded) {
-              console.log(`Successfully loaded and decoded typewriter sound: ${relativePath} from ${url}`);
-              return decoded;
-            }
-          } catch (err) {
-            console.warn(`Failed to retrieve/decode typewriter sound from ${url}:`, err);
+        try {
+          console.log(`Typewriter preloader loading local asset: ${url}`);
+          const response = await fetch(url, { cache: 'force-cache' });
+          if (!response.ok) return null;
+          
+          const arrayBuffer = await response.arrayBuffer();
+          if (arrayBuffer.byteLength < 100) return null;
+          
+          // Verify that we didn't fetch a html 404 skeleton or text template
+          const uint8 = new Uint8Array(arrayBuffer);
+          let textSnippet = '';
+          for (let i = 0; i < Math.min(uint8.length, 100); i++) {
+            textSnippet += String.fromCharCode(uint8[i]);
           }
+          if (
+            textSnippet.includes('<!DOCTYPE') || 
+            textSnippet.includes('<html') || 
+            textSnippet.includes('version https://git-lfs') ||
+            textSnippet.includes('<svg') ||
+            textSnippet.includes('{') || 
+            textSnippet.trim().startsWith('<')
+          ) {
+            console.warn(`Typewriter preloader skipped non-audio response: ${url}`);
+            return null;
+          }
+
+          const decoded = await new Promise<AudioBuffer | null>((res) => {
+            try {
+              const p = ctx.decodeAudioData(
+                arrayBuffer,
+                (decodedBuf) => res(decodedBuf),
+                () => res(null)
+              );
+              if (p && typeof p.catch === 'function') {
+                p.catch((err) => {
+                  console.warn(`Decode catch warning for ${url}: `, err);
+                  res(null);
+                });
+              }
+            } catch (err) {
+              console.warn(`Decode try-catch warning for ${url}: `, err);
+              res(null);
+            }
+          });
+
+          if (decoded) {
+            console.log(`Successfully loaded and decoded local typewriter sound: ${relativePath}`);
+            return decoded;
+          }
+        } catch (err) {
+          console.warn(`Failed to retrieve/decode local typewriter sound from ${url}:`, err);
         }
         return null;
       };
 
-      // 1. First, attempt to load the user's custom, newly dropped high-quality master file!
-      console.log(`Typewriter Preloader: Attempting to fetch master file 'sounds/the-machine-prints-sound-by-sound.wav'`);
-      const masterBuffer = await loadAndDecode('sounds/the-machine-prints-sound-by-sound.wav');
+      console.log(`Typewriter Preloader: Attempting to fetch project master file '${TYPEWRITER_MASTER_AUDIO}'`);
+      const masterBuffer = await loadAndDecode(TYPEWRITER_MASTER_AUDIO);
 
       if (masterBuffer) {
-        // Excellent! The user's uploaded master file decoded successfully.
-        // Let's segment it into key, space, bell, and ret buffers.
         const segments = segmentTypewriterSounds(masterBuffer, ctx);
         preloadedBuffers = segments;
-        console.log('[Typewriter Audio Preloader] Successfully segmented the user-uploaded audio file!');
+        console.log('[Typewriter Audio Preloader] Successfully segmented the project audio file!');
       } else {
-        // Fallback: load classical individual wav files from CDN if master file failed or didn't load
-        console.log(`[Typewriter Audio Preloader] Master file not parsed yet. Loading separate individual sound buffers as a fail-safe...`);
-        const [keyBuf, spaceBuf, bellBuf, returnBuf] = await Promise.all([
-          loadAndDecode('sounds/key.wav'),
-          loadAndDecode('sounds/space.wav'),
-          loadAndDecode('sounds/bell.wav'),
-          loadAndDecode('sounds/return.wav'),
-        ]);
-
-        preloadedBuffers = {
-          key: keyBuf,
-          space: spaceBuf,
-          bell: bellBuf,
-          ret: returnBuf,
-        };
+        console.warn(`[Typewriter Audio Preloader] Project audio file could not be decoded. Procedural fallback will be used.`);
+        preloadedBuffers = { key: null, space: null, bell: null, ret: null };
       }
 
       (window as any).__globalAudioBuffers = preloadedBuffers;

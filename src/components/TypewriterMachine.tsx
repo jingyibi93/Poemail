@@ -35,74 +35,9 @@ export default function TypewriterMachine({
   const bellBufferRef = useRef<AudioBuffer | null>(null);
   const returnBufferRef = useRef<AudioBuffer | null>(null);
 
-  // Guaranteed high-fidelity HTML5 Audio preloaded pools for all sound events
-  const keyAudioPoolRef = useRef<HTMLAudioElement[]>([]);
-  const keyPoolIndexRef = useRef(0);
-  const spaceAudioPoolRef = useRef<HTMLAudioElement[]>([]);
-  const spacePoolIndexRef = useRef(0);
-  const returnAudioPoolRef = useRef<HTMLAudioElement[]>([]);
-  const returnPoolIndexRef = useRef(0);
-  const bellAudioPoolRef = useRef<HTMLAudioElement[]>([]);
-  const bellPoolIndexRef = useRef(0);
-
-  // Absolute fallback path helper for sandboxed iframe relative asset location
-  const getAssetUrl = (relativePath: string) => {
-    if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
-      return relativePath;
-    }
-    // Prefer uncorrupted CDN assets for typewriter sound files to bypass local disk WAV corruption
-    const cleanPath = relativePath.startsWith('/') ? relativePath.substring(1) : relativePath;
-    if (cleanPath.startsWith('sounds/')) {
-      return `https://cdn.jsdelivr.net/gh/mushfiq/typewriter@master/public/${cleanPath}`;
-    }
-    const origin = window.location.origin;
-    return `${origin}/${cleanPath}`;
-  };
-
   // Preload authentic typewriter sound files
   useEffect(() => {
     let isMounted = true;
-
-    // Initialize rotating HTML5 Audio pools for standard clacks, spaces, carriage returns, and bells
-    const keyPoolSize = 14;
-    const keyPool: HTMLAudioElement[] = [];
-    for (let i = 0; i < keyPoolSize; i++) {
-      const audio = new Audio(getAssetUrl('sounds/key.wav'));
-      audio.preload = 'auto';
-      audio.volume = 1.0;
-      keyPool.push(audio);
-    }
-    keyAudioPoolRef.current = keyPool;
-
-    const spacePoolSize = 6;
-    const spacePool: HTMLAudioElement[] = [];
-    for (let i = 0; i < spacePoolSize; i++) {
-      const audio = new Audio(getAssetUrl('sounds/space.wav'));
-      audio.preload = 'auto';
-      audio.volume = 1.0;
-      spacePool.push(audio);
-    }
-    spaceAudioPoolRef.current = spacePool;
-
-    const returnPoolSize = 3;
-    const returnPool: HTMLAudioElement[] = [];
-    for (let i = 0; i < returnPoolSize; i++) {
-      const audio = new Audio(getAssetUrl('sounds/return.wav'));
-      audio.preload = 'auto';
-      audio.volume = 1.0;
-      returnPool.push(audio);
-    }
-    returnAudioPoolRef.current = returnPool;
-
-    const bellPoolSize = 3;
-    const bellPool: HTMLAudioElement[] = [];
-    for (let i = 0; i < bellPoolSize; i++) {
-      const audio = new Audio(getAssetUrl('sounds/bell.wav'));
-      audio.preload = 'auto';
-      audio.volume = 1.0;
-      bellPool.push(audio);
-    }
-    bellAudioPoolRef.current = bellPool;
 
     const initAudio = async () => {
       try {
